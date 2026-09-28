@@ -40,7 +40,7 @@ api.post("/results", async (req, res) => {
 
 api.get("/results", async (req, res) => {
   const { results } = await env.DB
-    .prepare("SELECT seed, score, created_at AS createdAt FROM results WHERE user_id = ? ORDER BY created_at DESC LIMIT 20")
+    .prepare("SELECT id, seed, score, created_at AS createdAt FROM results WHERE user_id = ? ORDER BY created_at DESC LIMIT 20")
     .bind(currentUserId(req))
     .all();
   res.json(results);
