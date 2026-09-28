@@ -1,0 +1,4 @@
+BETTER_AUTH_URL=http://localhost:5173
+BETTER_AUTH_SECRET=<ここに openssl rand -base64 32 の出力>
+DISCORD_CLIENT_ID=<ここにDiscordアプリのClient ID>
+DISCORD_CLIENT_SECRET=<ここにDiscordアプリのClient Secret>

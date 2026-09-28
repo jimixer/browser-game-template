@@ -22,10 +22,11 @@ npm run build --workspace game-rule-engine
 
 # 移行を当てていないローカルD1は、新しいコードが読むテーブルを持たない
 echo "=== ローカルD1の移行"
-(cd packages/api && npx wrangler d1 migrations apply browser-game-template --local)
+(cd packages/api && npx wrangler d1 migrations apply DB --local)
 
-if grep -q '<ここに' packages/api/.dev.vars 2>/dev/null; then
-  echo "注意: packages/api/.dev.vars のDiscordの値がプレースホルダのまま。サインインは使えない" >&2
+[ -f packages/api/.dev.vars ] || abort "packages/api/.dev.vars がない。.dev.vars.example をコピーして値を入れること"
+if grep -q '<ここに' packages/api/.dev.vars; then
+  echo "注意: packages/api/.dev.vars にプレースホルダが残っている。サインインは使えない" >&2
 fi
 
 # 標準入力は端末から切り離す。ジョブ制御のもとでは2つとも前面ではないプロセスグループになり、

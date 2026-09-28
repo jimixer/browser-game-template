@@ -35,7 +35,7 @@ export default function HomePage() {
       <h2>最近の結果</h2>
       <ul>
         {results.map((r) => (
-          <li key={r.createdAt}>
+          <li key={r.id}>
             {new Date(r.createdAt).toLocaleString()} — {r.score}点
           </li>
         ))}
