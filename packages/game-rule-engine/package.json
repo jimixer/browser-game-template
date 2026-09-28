@@ -1,0 +1,20 @@
+{
+  "name": "game-rule-engine",
+  "version": "0.1.0",
+  "description": "ゲームルール層。DB/API/インフラに依存しない純粋なTypeScript",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "pretest": "npm run build",
+    "test": "node --test dist/*.test.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
+  }
+}

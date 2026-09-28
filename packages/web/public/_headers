@@ -1,0 +1,5 @@
+# Pagesが全レスポンスに付けるヘッダ。
+# style-src の 'unsafe-inline' は style= 属性のため。
+# base-uri と frame-ancestors は default-src にフォールバックしないので個別に書く。
+/*
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'

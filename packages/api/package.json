@@ -1,0 +1,27 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "description": "アプリケーション層。game-rule-engineを呼ぶExpress実装をCloudflare WorkersのWorkerとして動かす",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler types && tsc -p tsconfig.json",
+    "pretest": "npm run build",
+    "test": "node --test dist/*.test.js"
+  },
+  "dependencies": {
+    "better-auth": "^1.7.5",
+    "express": "^5.2.1",
+    "game-rule-engine": "*"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "wrangler": "^4.135.0"
+  }
+}

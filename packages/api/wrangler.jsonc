@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "browser-game-template-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  // node:http を使うため。httpServerHandler には 2025-08-15 以降の互換性日付が要る
+  "compatibility_flags": ["nodejs_compat"],
+  // 公開して差し支えない値。シークレットは wrangler secret put で入れる
+  "vars": {
+    "BETTER_AUTH_URL": "https://browser-game-template-web.pages.dev"
+  },
+  "secrets": {
+    "required": ["BETTER_AUTH_SECRET", "DISCORD_CLIENT_ID", "DISCORD_CLIENT_SECRET"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "browser-game-template",
+      "database_id": "<npx wrangler d1 create browser-game-template の出力>",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

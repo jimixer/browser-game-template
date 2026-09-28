@@ -1,0 +1,17 @@
+{
+  "name": "browser-game-template",
+  "private": true,
+  "workspaces": [
+    "packages/game-rule-engine",
+    "packages/api",
+    "packages/web"
+  ],
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "deploy": "bash scripts/deploy.sh"
+  },
+  "allowScripts": {
+    "workerd@1.20260926.1": true,
+    "esbuild@0.28.1": true
+  }
+}
