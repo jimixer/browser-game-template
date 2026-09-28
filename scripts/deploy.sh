@@ -18,13 +18,17 @@ branch=$(git rev-parse --abbrev-ref HEAD)
 step "テスト"
 npm test --workspaces --if-present
 
+# wrangler deployは型を検査せずに束ねるので、ここで通す
+step "apiの型検査"
+npm run typecheck --workspace api
+
 # webのテストは型検査を含まないので、ビルドをここで通す。dist/ はPagesへ配る中身でもある
 step "webのビルド"
 npm run build --workspace web
 
 # 移行はここまでのどれかが落ちたら走らない。リモートのD1への変更は取り消せない
 step "D1の移行"
-if ! (cd packages/api && npx wrangler d1 migrations apply browser-game-template --remote); then
+if ! (cd packages/api && npx wrangler d1 migrations apply DB --remote); then
   abort "移行に失敗した。D1のREST APIは散発的に403(code 7403)を返すことがあるので、まず数分置いて実行し直すこと"
 fi
 
@@ -35,7 +39,9 @@ step "APIのWorker"
 step "Pages"
 (cd packages/web && npx wrangler pages deploy)
 
+# 公開URLはBetter Authに渡している値と同じものを見る。pages.devの名前が埋まっていて接尾辞が付いたときも、直すのはwrangler.jsoncの1か所で済む
 step "疎通確認"
-status=$(curl -s -o /dev/null -w '%{http_code}' https://browser-game-template-web.pages.dev/api/health)
-[ "$status" = "200" ] || abort "公開エンドポイントが $status を返した。https://browser-game-template-web.pages.dev を確認すること"
+url=$(grep -o '"BETTER_AUTH_URL": *"[^"]*"' packages/api/wrangler.jsonc | cut -d'"' -f4)
+status=$(curl -s -o /dev/null -w '%{http_code}' "$url/api/health")
+[ "$status" = "200" ] || abort "公開エンドポイントが $status を返した。$url を確認すること"
 echo "OK"

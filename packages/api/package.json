@@ -9,9 +9,7 @@
   },
   "scripts": {
     "dev": "wrangler dev",
-    "build": "wrangler types && tsc -p tsconfig.json",
-    "pretest": "npm run build",
-    "test": "node --test dist/*.test.js"
+    "typecheck": "wrangler types && tsc -p tsconfig.json"
   },
   "dependencies": {
     "better-auth": "^1.7.5",

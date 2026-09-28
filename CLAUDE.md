@@ -25,6 +25,7 @@ scripts/                   ローカル起動とデプロイ
 npm run dev      # ローカルのapi(8787)とweb(5173)を同時に起動する(scripts/dev.sh)
 npm run deploy   # 本番へデプロイする(scripts/deploy.sh)。D1の移行をWorkerより先に当てる順序を崩さないこと
 npm test --workspaces --if-present
+npm run typecheck --workspace api   # apiはテストの代わりに型検査。wrangler deployは型を見ない
 ```
 - テストはNode標準の`node:test`(依存を増やさない)
 - Node.js 22系以降が必要
