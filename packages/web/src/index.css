@@ -4,12 +4,11 @@
   color-scheme: dark;
 
   /*
-   * 色の役割。文字に使う色は --bg・--surface・--surface-muted のどの上でも4.5:1以上、
+   * 色の役割。文字に使う色は --bg・--surface のどちらの上でも4.5:1以上、
    * --line は --bg と --surface の上で3:1以上を保つこと。
    */
   --bg: #0c0e0e;
   --surface: #151818;
-  --surface-muted: #1d2121;
   --line: #626b6b;
   --fg: #e4e8e8;
   --fg-muted: #99a2a2;
@@ -17,20 +16,16 @@
   --accent-text: #0c0e0e;
   --danger: #ff8a80;
   --highlight: #7beb4b;
-
-
 }
 
 @theme {
   --color-*: initial;
-  --spacing: 0.3rem;
   --radius-card: 10px;
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
-  --color-surface-muted: var(--surface-muted);
   --color-line: var(--line);
   --color-fg: var(--fg);
   --color-fg-muted: var(--fg-muted);
@@ -58,21 +53,11 @@
     font-weight: bold;
   }
 
-  h3,
-  h4 {
-    font-weight: bold;
-  }
-
   h1,
   h2,
-  h3,
-  h4,
   p,
   ul,
-  ol,
-  dl,
-  form,
-  fieldset {
+  ol {
     margin-block: 0.6rem;
   }
 
@@ -96,12 +81,6 @@
     max-width: 100%;
   }
 
-  input[type="checkbox"],
-  input[type="radio"] {
-    accent-color: var(--accent);
-    padding: 0;
-  }
-
   button:not(:disabled) {
     cursor: pointer;
   }
@@ -113,15 +92,5 @@
 
   :disabled {
     opacity: 0.5;
-  }
-
-  dialog {
-    background: var(--surface);
-    color: var(--fg);
-    margin: auto;
-  }
-
-  dialog::backdrop {
-    background: color-mix(in srgb, var(--bg) 70%, transparent);
   }
 }

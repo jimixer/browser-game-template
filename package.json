@@ -11,7 +11,7 @@
     "deploy": "bash scripts/deploy.sh"
   },
   "allowScripts": {
-    "workerd@1.20260926.1": true,
-    "esbuild@0.28.1": true
+    "workerd": true,
+    "esbuild": true
   }
 }

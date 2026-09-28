@@ -1,7 +1,7 @@
 // APIを呼び出すクライアント。同一オリジンの`/api`配下に置かれる。
 import type { PlayResult, SessionUser, StoredResult } from "../types";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const BASE_URL = "/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -13,7 +13,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `API error ${res.status}: ${path}`);
   }
-  if (res.status === 204) return undefined as T;
   return res.json();
 }
 

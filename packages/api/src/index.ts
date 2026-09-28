@@ -3,11 +3,12 @@
  * 判定はすべてこのサーバー側でgame-rule-engineを呼んで行う(サーバー権威)。
  */
 import { httpServerHandler } from "cloudflare:node";
+// httpServerHandler経由のExpressのハンドラはWorkerのenvを引数で受け取らないので、モジュールレベルのenvから取る
+import { env } from "cloudflare:workers";
 import express from "express";
 import { toNodeHandler } from "better-auth/node";
 import { play } from "game-rule-engine";
 import { auth } from "./auth.js";
-import { db } from "./db.js";
 import { attachUser, currentUserId, requireUser } from "./session.js";
 
 const app = express();
@@ -30,7 +31,7 @@ api.use("/results", requireUser);
 
 api.post("/results", async (req, res) => {
   const result = play(crypto.getRandomValues(new Uint32Array(1))[0]);
-  await db()
+  await env.DB
     .prepare("INSERT INTO results (id, user_id, seed, score, created_at) VALUES (?, ?, ?, ?, ?)")
     .bind(crypto.randomUUID(), currentUserId(req), result.seed, result.score, new Date().toISOString())
     .run();
@@ -38,7 +39,7 @@ api.post("/results", async (req, res) => {
 });
 
 api.get("/results", async (req, res) => {
-  const { results } = await db()
+  const { results } = await env.DB
     .prepare("SELECT seed, score, created_at AS createdAt FROM results WHERE user_id = ? ORDER BY created_at DESC LIMIT 20")
     .bind(currentUserId(req))
     .all();
