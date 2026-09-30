@@ -31,4 +31,4 @@ npm run typecheck --workspace api   # apiはテストの代わりに型検査。
 ```
 - テストはNode標準の`node:test`(依存を増やさない)
 - Node.js 22.12以降が必要(vite 8の下限)
-- apiとwebは`game-rule-engine`のソース(`src/`)を直接読む。`dist/`はルール層のテストを走らせるためだけにある
+- apiとwebは`game-rule-engine`のビルド結果(`dist/`)を読む([ADR 0003](docs/adr/0003-engine-dist.md))。`npm install`と`npm run dev`が作るが、devの外でルール層を変えたら`npm run build --workspace game-rule-engine`で作り直してから型検査する
