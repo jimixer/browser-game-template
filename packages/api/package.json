@@ -1,7 +1,7 @@
 {
   "name": "api",
   "version": "0.1.0",
-  "description": "アプリケーション層。game-rule-engineを呼ぶExpress実装をCloudflare WorkersのWorkerとして動かす",
+  "description": "アプリケーション層。game-rule-engineを呼ぶHonoのアプリをCloudflare WorkersのWorkerとして動かす",
   "type": "module",
   "private": true,
   "engines": {
@@ -13,11 +13,10 @@
   },
   "dependencies": {
     "better-auth": "^1.7.5",
-    "express": "^5.2.1",
-    "game-rule-engine": "*"
+    "game-rule-engine": "*",
+    "hono": "^4.13.12"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6",
     "@types/node": "^22.0.0",
     "typescript": "~6.0.2",
     "wrangler": "^4.135.0"

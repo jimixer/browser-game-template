@@ -10,7 +10,7 @@
 docs/adr/                  確定した決定の記録(棄却案とその理由も残す)
 packages/
   game-rule-engine/        ゲームルール層(DB/API/インフラに非依存の純粋なTypeScript)
-  api/                     アプリケーション層(Express on Cloudflare Workers、D1、Better Auth)
+  api/                     アプリケーション層(Hono on Cloudflare Workers、D1、Better Auth)
   web/                     UI層(React + Vite + Tailwind)
 scripts/                   ローカル起動とデプロイ
 ```

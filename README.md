@@ -22,7 +22,7 @@ npm install
 - API: `packages/api/src/index.ts`の`POST /api/play`
 - 画面: `packages/web/src/pages/HomePage.tsx`と、`packages/web/src/data/apiClient.ts`の`play()`
 
-ゲームのデータを残すときは、`packages/api/migrations/`に`0002_`から移行を足す。`0001`は認証のテーブルなので触らない。ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(req)`で主体を取る。
+ゲームのデータを残すときは、`packages/api/migrations/`に`0002_`から移行を足す。`0001`は認証のテーブルなので触らない。ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(c)`で主体を取る。
 
 画面は同じオリジンの資源しか読めない(`packages/web/public/_headers`のCSP)。外部のフォント・画像・CDNを使うときは、そのオリジンをCSPに足す。足さないと、画面には何も出ずにブラウザのコンソールにだけエラーが出る。
 
