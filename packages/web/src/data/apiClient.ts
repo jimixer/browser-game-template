@@ -1,16 +1,16 @@
 // APIを呼び出すクライアント。同一オリジンの`/api`配下に置かれる。
-import type { PlayResult, SessionUser } from "../types";
+import type { PlayResult } from "game-rule-engine";
+import type { SessionUser } from "../types";
 
 const BASE_URL = "/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // 呼び出し側がヘッダーを渡しても、既定のContent-Typeを落とさない
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}${path}`, {
-      headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(10_000),
-      ...init,
-    });
+    res = await fetch(`${BASE_URL}${path}`, { signal: AbortSignal.timeout(10_000), ...init, headers });
   } catch (e) {
     console.error(e);
     throw new Error(
@@ -33,8 +33,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export async function play(guess: number): Promise<PlayResult> {
+/** サインインしていれば、更新後の自己ベストが`best`に入る */
+export async function play(guess: number): Promise<PlayResult & { best?: number }> {
   return request("/play", { method: "POST", body: JSON.stringify({ guess }) });
+}
+
+/** 自分の自己ベスト。サインインが必要。まだ遊んでいなければnull */
+export async function getBest(): Promise<number | null> {
+  const { best } = await request<{ best: number | null }>("/best");
+  return best;
 }
 
 /** 未サインインならnull */

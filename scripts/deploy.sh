@@ -16,6 +16,10 @@ branch=$(git rev-parse --abbrev-ref HEAD)
 [ -z "$(git status --porcelain)" ] || abort "コミットしていない変更がある。何を配ったのかを後から辿れるようにしてから実行すること"
 ! grep -qE '"[^"]*<[^"]*"' packages/api/wrangler.jsonc || abort "packages/api/wrangler.jsonc にプレースホルダ(<...>)が残っている。READMEの「初回のデプロイ」を済ませること"
 
+# apiとwebはルール層のビルド結果(dist/)を読む。手元のdist/が古いまま配らないよう、最初に作り直す
+step "ルール層のビルド"
+npm run build --workspace game-rule-engine
+
 step "テスト"
 npm test --workspaces --if-present
 

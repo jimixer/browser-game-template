@@ -1,8 +1,8 @@
 # browser-game-template
 
-ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Hono on Cloudflare Workers + D1 + Better Auth、[ADR 0002](docs/adr/0002-hono.md))→ `web`(React + Vite)の3層で、「数を選んで遊ぶ → サーバーで判定する」の一本だけが通っている。認証(Better Auth + Discord)とD1はつないであり、ゲームのデータを残す部分は各ゲームで足す。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
+ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Hono on Cloudflare Workers + D1 + Better Auth、[ADR 0002](docs/adr/0002-hono.md))→ `web`(React + Vite)の3層で、「数を選んで遊ぶ → サーバーで判定する → サインインしていれば自己ベストをD1に残す」の一本だけが通っている。認証はBetter Auth + Discord。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
 
-必要なもの: Node.js 22以降。デプロイにはCloudflareのアカウント、サインインにはDiscordのアカウントも要る。
+必要なもの: Node.js 22.12以降。デプロイにはCloudflareのアカウント、サインインにはDiscordのアカウントも要る。
 
 ## このテンプレートから始める
 
@@ -19,8 +19,11 @@ npm install
 数当ては例なので、ゲームに置き換える。例のコードは次の場所にある。
 
 - ルール: `packages/game-rule-engine/src/index.ts`(`play()`・`isValidGuess()`)とそのテスト
-- API: `packages/api/src/index.ts`の`POST /api/play`
-- 画面: `packages/web/src/pages/HomePage.tsx`と、`packages/web/src/data/apiClient.ts`の`play()`
+- API: `packages/api/src/index.ts`の`POST /api/play`と`GET /api/best`
+- 移行: `packages/api/migrations/0002_best_score.sql`
+- 画面: `packages/web/src/pages/HomePage.tsx`と、`packages/web/src/data/apiClient.ts`の`play()`・`getBest()`
+
+自己ベストのテーブルが要らなくなっても、`0002`は消さず書き換えず、`0003_`の移行で`DROP TABLE best_score;`する。`npm run dev`の時点でローカルのD1には当たっているので、書き換えても反映されない。
 
 ### ゲームの状態を残す
 
@@ -28,8 +31,8 @@ npm install
 
 状態はまずD1に残す。
 
-- `packages/api/migrations/`に`0002_`から移行を足す。`0001`は認証のテーブルなので触らない。
-- ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(c)`で主体を取る。
+- `packages/api/migrations/`に`0003_`から移行を足す。`0001`は認証のテーブル、`0002`は自己ベストの例。
+- ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(c)`で主体を取る(例: `GET /api/best`)。サインインが任意のルートは`c.get("userId")`を見る(例: `POST /api/play`)。
 - サインインしていないゲストにはユーザーIDがない。ゲストの状態も残すなら、ゲームのIDを発行してクライアントに持たせる。
 - 複数人が同時に書き換える値(ボスのHPなど)は、`UPDATE ... SET hp = hp - ? ... RETURNING hp`のようにSQL 1文で書き換える。読んで、ルール層で計算して、書き戻すと、間に入った他のリクエストの更新が消える。
 
@@ -70,8 +73,10 @@ npx wrangler d1 create <new>              # 出力の database_id を wrangler.j
 npx wrangler secret put BETTER_AUTH_SECRET  # DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET も同様
 ```
 
+3つとも入れないとデプロイできない。サインインをまだ使わないなら、Discordの2つは適当な値でよい(サインインだけが失敗し、ゲームは遊べる)。後から`secret put`し直せば、デプロイし直さずに有効になる。
+
 アカウントの`workers.dev`サブドメインを、ダッシュボードの Workers & Pages で確認する。`packages/api/wrangler.jsonc` の `BETTER_AUTH_URL` にある `<サブドメイン>` をそれに置き換え、そのURLに`/api/auth/callback/discord`を付けたものをDiscordのRedirectsにも足す。サブドメインはアカウントごとなので、Worker名が他のユーザーと衝突することはない。
 
 `wrangler.jsonc` の変更をコミットしてから、mainで `npm run deploy` する。プレースホルダ(`<...>`)が残っていると `deploy.sh` は最初に止まる。
 
-`deploy.sh` はテスト → lint → 型検査 → webのビルド → D1の移行 → Worker(webの静的ファイルを含む)→ `/api/health` の疎通確認の順に進み、どこかで落ちたらそこで止まる。以降のデプロイも `npm run deploy` だけでよい。
+`deploy.sh` はルール層のビルド → テスト → lint → 型検査 → webのビルド → D1の移行 → Worker(webの静的ファイルを含む)→ `/api/health` の疎通確認の順に進み、どこかで落ちたらそこで止まる。以降のデプロイも `npm run deploy` だけでよい。

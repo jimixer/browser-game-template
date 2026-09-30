@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ローカルの開発サーバー2つ(api: 8787 / web: 5173)を、前提を揃えてから同時に起動する。
+# ローカルの開発サーバー2つ(api: 8787 / web: 5173)とルール層の再ビルドを、前提を揃えてから同時に起動する。
 # Ctrl-Cですべて止まる。キー操作のショートカット(wranglerの[b]、viteのh+enter)は使えない。wranglerが抱えるworkerdまで落とすため、ジョブ制御を有効にして
 # プロセスグループごと終了させる(このスクリプトが起動した分だけが対象)。
 set -euo pipefail
@@ -15,6 +15,10 @@ for port in 8787 5173; do
     abort "ポート $port が既に使われている。別のセッションの開発サーバーが動いていないか確認すること"
   fi
 done
+
+# apiとwebはルール層のビルド結果(dist/)を読む。開発サーバーより先に一度ビルドしておく
+echo "=== ルール層のビルド"
+npm run build --workspace game-rule-engine
 
 # wrangler devはassetsのディレクトリがないと起動しない。画面はviteが配るので中身は空でよい
 mkdir -p packages/web/dist
@@ -32,8 +36,11 @@ if grep -q '<ここに' packages/api/.dev.vars; then
   echo "注意: packages/api/.dev.vars にプレースホルダが残っている。サインインは使えない" >&2
 fi
 
-# 標準入力は端末から切り離す。ジョブ制御のもとではどちらも前面ではないプロセスグループになり、
+# 標準入力は端末から切り離す。ジョブ制御のもとではいずれも前面ではないプロセスグループになり、
 # wranglerとviteがキー操作のために端末を読みにいくとSIGTTINで止まったまま応答しなくなる
+# ルール層を書き換えるとdist/が作り直され、wranglerとviteがそれを拾って読み直す
+(cd packages/game-rule-engine && npx tsc -w -p tsconfig.json --preserveWatchOutput) </dev/null &
+engine=$!
 (cd packages/api && npm run dev) </dev/null &
 api=$!
 (cd packages/web && npm run dev) </dev/null &
@@ -41,7 +48,7 @@ web=$!
 
 cleanup() {
   trap - EXIT INT TERM
-  for pid in "$api" "$web"; do kill -- "-$pid" 2>/dev/null || true; done
+  for pid in "$engine" "$api" "$web"; do kill -- "-$pid" 2>/dev/null || true; done
   wait 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
@@ -49,6 +56,6 @@ trap cleanup EXIT INT TERM
 echo "=== web http://localhost:5173 / api http://localhost:8787"
 # どれかが落ちたら、残りも止めて終わる(一部だけ動いている状態を残さない)。
 # wait -n はmacOS標準のbash 3.2にないので、生きているかを見て回る
-while kill -0 "$api" 2>/dev/null && kill -0 "$web" 2>/dev/null; do
+while kill -0 "$engine" 2>/dev/null && kill -0 "$api" 2>/dev/null && kill -0 "$web" 2>/dev/null; do
   sleep 1
 done
