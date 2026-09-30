@@ -70,6 +70,8 @@ npx wrangler d1 create <new>              # 出力の database_id を wrangler.j
 npx wrangler secret put BETTER_AUTH_SECRET  # DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET も同様
 ```
 
+3つとも入れないとデプロイできない。サインインをまだ使わないなら、Discordの2つは適当な値でよい(サインインだけが失敗し、ゲームは遊べる)。後から`secret put`し直せば、デプロイし直さずに有効になる。
+
 アカウントの`workers.dev`サブドメインを、ダッシュボードの Workers & Pages で確認する。`packages/api/wrangler.jsonc` の `BETTER_AUTH_URL` にある `<サブドメイン>` をそれに置き換え、そのURLに`/api/auth/callback/discord`を付けたものをDiscordのRedirectsにも足す。サブドメインはアカウントごとなので、Worker名が他のユーザーと衝突することはない。
 
 `wrangler.jsonc` の変更をコミットしてから、mainで `npm run deploy` する。プレースホルダ(`<...>`)が残っていると `deploy.sh` は最初に止まる。
