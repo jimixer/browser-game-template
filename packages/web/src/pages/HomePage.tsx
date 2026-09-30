@@ -21,6 +21,7 @@ export default function HomePage() {
   async function onPlay(e: FormEvent) {
     e.preventDefault();
     setError(undefined);
+    setLast(undefined);
     try {
       // 入力の検証はサーバーが行う。空欄はNumber("")で0にならないよう、NaN(JSONではnull)にして弾かせる
       setLast(await play(guess === "" ? NaN : Number(guess)));
