@@ -1,7 +1,0 @@
-{
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "browser-game-template-web",
-  "pages_build_output_dir": "dist",
-  "compatibility_date": "2026-09-01",
-  "services": [{ "binding": "API", "service": "browser-game-template-api" }]
-}

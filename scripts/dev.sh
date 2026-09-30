@@ -20,6 +20,9 @@ done
 echo "=== game-rule-engine のビルド"
 npm run build --workspace game-rule-engine
 
+# wrangler devはassetsのディレクトリがないと起動しない。画面はviteが配るので中身は空でよい
+mkdir -p packages/web/dist
+
 # 移行を当てていないローカルD1は、新しいコードが読むテーブルを持たない
 echo "=== ローカルD1の移行"
 (cd packages/api && npx wrangler d1 migrations apply DB --local)

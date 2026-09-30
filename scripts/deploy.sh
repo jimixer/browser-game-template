@@ -11,9 +11,10 @@ step() { printf '\n=== %s\n' "$1"; }
 abort() { printf '\n%s\n' "$1" >&2; exit 1; }
 
 branch=$(git rev-parse --abbrev-ref HEAD)
-# Pagesの本番URLは本番ブランチからのデプロイでしか更新されず、他はプレビュー扱いになる
+# 本番に出ているものがmainのどのコミットかを後から辿れるようにする
 [ "$branch" = "main" ] || abort "mainからデプロイすること(いまは $branch)"
 [ -z "$(git status --porcelain)" ] || abort "コミットしていない変更がある。何を配ったのかを後から辿れるようにしてから実行すること"
+! grep -qE '"[^"]*<[^"]*"' packages/api/wrangler.jsonc || abort "packages/api/wrangler.jsonc にプレースホルダ(<...>)が残っている。READMEの「初回のデプロイ」を済ませること"
 
 step "テスト"
 npm test --workspaces --if-present
@@ -22,7 +23,7 @@ npm test --workspaces --if-present
 step "apiの型検査"
 npm run typecheck --workspace api
 
-# webのテストは型検査を含まないので、ビルドをここで通す。dist/ はPagesへ配る中身でもある
+# webのテストは型検査を含まないので、ビルドをここで通す。dist/ はWorkerが静的ファイルとして配る中身でもある
 step "webのビルド"
 npm run build --workspace web
 
@@ -32,14 +33,11 @@ if ! (cd packages/api && npx wrangler d1 migrations apply DB --remote); then
   abort "移行に失敗した。D1のREST APIは散発的に403(code 7403)を返すことがあるので、まず数分置いて実行し直すこと"
 fi
 
-# Pagesのservice bindingはWorkerを名前で参照するため、Workerを先に置く
-step "APIのWorker"
+# Workerとwebの静的ファイルは同じWorkerとして一度に切り替わる
+step "Worker"
 (cd packages/api && npx wrangler deploy)
 
-step "Pages"
-(cd packages/web && npx wrangler pages deploy)
-
-# 公開URLはBetter Authに渡している値と同じものを見る。pages.devの名前が埋まっていて接尾辞が付いたときも、直すのはwrangler.jsoncの1か所で済む
+# 公開URLはBetter Authに渡している値と同じものを見る
 step "疎通確認"
 url=$(grep -o '"BETTER_AUTH_URL": *"[^"]*"' packages/api/wrangler.jsonc | cut -d'"' -f4)
 status=$(curl -s -o /dev/null -w '%{http_code}' "$url/api/health")
