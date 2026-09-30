@@ -5,7 +5,7 @@
 import { Hono } from "hono";
 import { isValidGuess, play } from "game-rule-engine";
 import { auth } from "./auth.js";
-import { attachUser, type AppEnv } from "./session.js";
+import { attachUser, currentUserId, requireUser, type AppEnv } from "./session.js";
 
 /** すべてのエンドポイントは/api配下に置く。wrangler.jsoncのrun_worker_firstで/api/*だけがこのWorkerに届く */
 const app = new Hono<AppEnv>().basePath("/api");
@@ -21,7 +21,7 @@ app.get("/health", async (c) => {
   return c.json({ ok: true });
 });
 
-/** 1回遊ぶ。判定は保存せずに返す。何をどう残すかはゲームごとに決める */
+/** 1回遊ぶ。サインインしていれば自己ベストを更新し、更新後の値を`best`で返す。ゲストは記録しない */
 app.post("/play", async (c) => {
   // JSONとして読めない本文も、不正な入力として400で弾く
   const body = await c.req.json().catch(() => null);
@@ -29,7 +29,26 @@ app.post("/play", async (c) => {
   // クライアントから来た値は信頼しない。有効かどうかはルール層が決める
   if (!isValidGuess(guess)) return c.json({ error: "0〜99の整数を選んでください" }, 400);
 
-  return c.json(play(crypto.getRandomValues(new Uint32Array(1))[0], guess));
+  const result = play(crypto.getRandomValues(new Uint32Array(1))[0], guess);
+  const userId = c.get("userId");
+  if (!userId) return c.json(result);
+  // 読んでから比べて書き戻すと、同じユーザーの並行したリクエストが互いの更新を消す。比較もSQL 1文の中で行う
+  const row = await c.env.DB.prepare(
+    `INSERT INTO best_score (user_id, score) VALUES (?, ?)
+     ON CONFLICT (user_id) DO UPDATE SET score = max(score, excluded.score)
+     RETURNING score`,
+  )
+    .bind(userId, result.score)
+    .first<{ score: number }>();
+  return c.json({ ...result, best: row!.score });
+});
+
+/** 自分の自己ベスト。まだ遊んでいなければnull */
+app.get("/best", requireUser, async (c) => {
+  const row = await c.env.DB.prepare("SELECT score FROM best_score WHERE user_id = ?")
+    .bind(currentUserId(c))
+    .first<{ score: number }>();
+  return c.json({ best: row?.score ?? null });
 });
 
 app.notFound((c) => c.json({ error: "そのAPIはありません" }, 404));

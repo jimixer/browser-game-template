@@ -33,8 +33,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export async function play(guess: number): Promise<PlayResult> {
+/** サインインしていれば、更新後の自己ベストが`best`に入る */
+export async function play(guess: number): Promise<PlayResult & { best?: number }> {
   return request("/play", { method: "POST", body: JSON.stringify({ guess }) });
+}
+
+/** 自分の自己ベスト。サインインが必要。まだ遊んでいなければnull */
+export async function getBest(): Promise<number | null> {
+  const { best } = await request<{ best: number | null }>("/best");
+  return best;
 }
 
 /** 未サインインならnull */

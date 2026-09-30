@@ -1,14 +1,23 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Button from "../components/Button";
-import { play } from "../data/apiClient";
+import { getBest, play } from "../data/apiClient";
+import { useSession } from "../data/useSession";
 import type { PlayResult } from "game-rule-engine";
 
 export default function HomePage() {
+  const { user } = useSession();
   const [guess, setGuess] = useState("50");
   const [last, setLast] = useState<PlayResult>();
   const [error, setError] = useState<string>();
   // 返事を待つ間は送らせない。状態を変える操作なら、連打がそのまま2回効く
   const [pending, setPending] = useState(false);
+  // 自己ベストはサインインしているときだけ。ゲストの記録は残さない
+  const [best, setBest] = useState<number | null>();
+
+  useEffect(() => {
+    if (!user) return;
+    getBest().then(setBest, (e: Error) => setError(e.message));
+  }, [user]);
 
   async function onPlay(e: FormEvent) {
     e.preventDefault();
@@ -16,7 +25,9 @@ export default function HomePage() {
     setPending(true);
     try {
       // 入力の検証はサーバーが行う。空欄はNumber("")で0にならないよう、NaN(JSONではnull)にして弾かせる
-      setLast(await play(guess === "" ? NaN : Number(guess)));
+      const result = await play(guess === "" ? NaN : Number(guess));
+      setLast(result);
+      if (result.best !== undefined) setBest(result.best);
     } catch (e) {
       setLast(undefined);
       setError((e as Error).message);
@@ -47,6 +58,7 @@ export default function HomePage() {
           正解は{last.answer}。{last.score}点
         </p>
       )}
+      {best != null && <p>自己ベスト: {best}点</p>}
     </div>
   );
 }
