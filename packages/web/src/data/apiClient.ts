@@ -37,6 +37,7 @@ export async function signInWithDiscord(): Promise<void> {
 }
 
 export async function signOut(): Promise<void> {
-  await request("/auth/sign-out", { method: "POST" });
+  // Better AuthはPOSTにJSONの本文を求める。空の本文は不正なJSONとして400で弾く
+  await request("/auth/sign-out", { method: "POST", body: "{}" });
   window.location.href = "/";
 }
