@@ -30,5 +30,5 @@ npm test --workspaces --if-present
 npm run typecheck --workspace api   # apiはテストの代わりに型検査。wrangler deployは型を見ない
 ```
 - テストはNode標準の`node:test`(依存を増やさない)
-- Node.js 22系以降が必要
+- Node.js 22.12以降が必要(vite 8の下限)
 - apiとwebは`game-rule-engine`のソース(`src/`)を直接読む。`dist/`はルール層のテストを走らせるためだけにある
