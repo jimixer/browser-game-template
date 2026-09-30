@@ -7,16 +7,21 @@ export default function HomePage() {
   const [guess, setGuess] = useState("50");
   const [last, setLast] = useState<PlayResult>();
   const [error, setError] = useState<string>();
+  // 返事を待つ間は送らせない。状態を変える操作なら、連打がそのまま2回効く
+  const [pending, setPending] = useState(false);
 
   async function onPlay(e: FormEvent) {
     e.preventDefault();
     setError(undefined);
-    setLast(undefined);
+    setPending(true);
     try {
       // 入力の検証はサーバーが行う。空欄はNumber("")で0にならないよう、NaN(JSONではnull)にして弾かせる
       setLast(await play(guess === "" ? NaN : Number(guess)));
     } catch (e) {
+      setLast(undefined);
       setError((e as Error).message);
+    } finally {
+      setPending(false);
     }
   }
 
@@ -32,7 +37,7 @@ export default function HomePage() {
           onChange={(e) => setGuess(e.target.value)}
           aria-label="選ぶ数"
         />
-        <Button kind="primary" type="submit">
+        <Button kind="primary" type="submit" disabled={pending}>
           遊ぶ
         </Button>
       </form>
