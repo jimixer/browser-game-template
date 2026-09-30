@@ -1,6 +1,6 @@
 # browser-game-template
 
-ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Cloudflare Workers + D1 + Better Auth)→ `web`(React + Vite)の3層で、「数を選んで遊ぶ → サーバーで判定する」の一本だけが通っている。認証(Better Auth + Discord)とD1はつないであり、ゲームのデータを残す部分は各ゲームで足す。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
+ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Hono on Cloudflare Workers + D1 + Better Auth、[ADR 0002](docs/adr/0002-hono.md))→ `web`(React + Vite)の3層で、「数を選んで遊ぶ → サーバーで判定する」の一本だけが通っている。認証(Better Auth + Discord)とD1はつないであり、ゲームのデータを残す部分は各ゲームで足す。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
 
 必要なもの: Node.js 22以降。デプロイにはCloudflareのアカウント、サインインにはDiscordのアカウントも要る。
 
