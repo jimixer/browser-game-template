@@ -1,17 +1,12 @@
 import { useState, type FormEvent } from "react";
 import Button from "../components/Button";
 import { play } from "../data/apiClient";
-import { useSession } from "../data/useSession";
 import type { PlayResult } from "../types";
 
 export default function HomePage() {
-  const { loading, failed } = useSession();
   const [guess, setGuess] = useState("50");
   const [last, setLast] = useState<PlayResult>();
   const [error, setError] = useState<string>();
-
-  if (loading) return null;
-  if (failed) return <p className="text-danger">サーバーに接続できません。apiが動いているか確認してください。</p>;
 
   async function onPlay(e: FormEvent) {
     e.preventDefault();

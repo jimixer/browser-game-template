@@ -3,7 +3,7 @@
   "name": "browser-game-template",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
-  // node:http を使うため。httpServerHandler には 2025-08-15 以降の互換性日付が要る
+  // Better AuthがWorkersではnode:async_hooksのAsyncLocalStorageを使うため
   "compatibility_flags": ["nodejs_compat"],
   // webのビルド結果も同じWorkerから配る(docs/adr/0001-workers-static-assets.md)
   "assets": {

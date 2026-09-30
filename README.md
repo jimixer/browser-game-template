@@ -1,6 +1,6 @@
 # browser-game-template
 
-ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Cloudflare Workers + D1 + Better Auth)→ `web`(React + Vite)の3層で、「数を選んで遊ぶ → サーバーで判定する」の一本だけが通っている。認証(Better Auth + Discord)とD1はつないであり、ゲームのデータを残す部分は各ゲームで足す。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
+ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Hono on Cloudflare Workers + D1 + Better Auth、[ADR 0002](docs/adr/0002-hono.md))→ `web`(React + Vite)の3層で、「数を選んで遊ぶ → サーバーで判定する」の一本だけが通っている。認証(Better Auth + Discord)とD1はつないであり、ゲームのデータを残す部分は各ゲームで足す。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
 
 必要なもの: Node.js 22以降。デプロイにはCloudflareのアカウント、サインインにはDiscordのアカウントも要る。
 
@@ -10,7 +10,7 @@ GitHubの「Use this template」で自分のリポジトリを作ってcloneし�
 
 ```bash
 git clone <自分のリポジトリ> <new> && cd <new>
-git grep -l browser-game-template -- ':!README.md' | xargs sed -i 's/browser-game-template/<new>/g'
+git grep -l browser-game-template -- ':!README.md' | xargs perl -pi -e 's/browser-game-template/<new>/g'
 npm install
 ```
 
@@ -22,7 +22,25 @@ npm install
 - API: `packages/api/src/index.ts`の`POST /api/play`
 - 画面: `packages/web/src/pages/HomePage.tsx`と、`packages/web/src/data/apiClient.ts`の`play()`
 
-ゲームのデータを残すときは、`packages/api/migrations/`に`0002_`から移行を足す。`0001`は認証のテーブルなので触らない。ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(req)`で主体を取る。
+### ゲームの状態を残す
+
+この雛形は、1回の操作ごとにapiへ問い合わせてサーバーで判定する。往復に数十〜数百ミリ秒かかってよいゲーム(ターン制のゲーム、複数人で同じボスを叩くマルチバトルなど)に向く。サーバーが1秒に数十回状態を進めるような、反応の厳しいアクションゲームは対象外。
+
+状態はまずD1に残す。
+
+- `packages/api/migrations/`に`0002_`から移行を足す。`0001`は認証のテーブルなので触らない。
+- ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(c)`で主体を取る。
+- サインインしていないゲストにはユーザーIDがない。ゲストの状態も残すなら、ゲームのIDを発行してクライアントに持たせる。
+- 複数人が同時に書き換える値(ボスのHPなど)は、`UPDATE ... SET hp = hp - ? ... RETURNING hp`のようにSQL 1文で書き換える。読んで、ルール層で計算して、書き戻すと、間に入った他のリクエストの更新が消える。
+
+次のどちらかに当てはまったら、共有する状態をDurable Objectsに移す。1つのバトルを1つのDurable Objectにすると、そのバトルへの操作が1か所で順に処理される。
+
+- 共有する状態を、SQL 1文ではなくルール層で計算して書き換える必要がある。
+- 他の人の操作を、問い合わせを待たずにすぐ届けたい(WebSocket)。Workerは`stub.fetch(c.req.raw)`でリクエストをそのままDurable Objectへ渡す。
+
+状態を変える操作(攻撃など)は、通信が切れても、サーバーでは処理が終わっていることがある。そのまま送り直すと2回効くので、失敗したら最新の状態を取り直してから、送り直すかを決める。確実に1回だけ効かせるには、操作ごとに一意のIDを付けて送り、サーバーで同じIDの2回目を無視する。
+
+画面は同じオリジンの資源しか読めない(`packages/web/public/_headers`のCSP)。外部のフォント・画像・CDNを使うときは、そのオリジンをCSPに足す。足さないと、画面には何も出ずにブラウザのコンソールにだけエラーが出る。
 
 ## ローカルで動かす
 
