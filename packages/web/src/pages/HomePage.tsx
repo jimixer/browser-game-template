@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import Button from "../components/Button";
 import { play } from "../data/apiClient";
-import type { PlayResult } from "../types";
+import type { PlayResult } from "game-rule-engine";
 
 export default function HomePage() {
   const [guess, setGuess] = useState("50");

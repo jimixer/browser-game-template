@@ -1,5 +1,6 @@
 // APIを呼び出すクライアント。同一オリジンの`/api`配下に置かれる。
-import type { PlayResult, SessionUser } from "../types";
+import type { PlayResult } from "game-rule-engine";
+import type { SessionUser } from "../types";
 
 const BASE_URL = "/api";
 
