@@ -9,7 +9,7 @@ import express from "express";
 import { toNodeHandler } from "better-auth/node";
 import { isValidGuess, play } from "game-rule-engine";
 import { auth } from "./auth.js";
-import { attachUser, currentUserId, requireUser } from "./session.js";
+import { attachUser } from "./session.js";
 
 const app = express();
 
@@ -23,34 +23,19 @@ app.use(attachUser);
 const api = express.Router();
 app.use("/api", api);
 
-api.get("/health", (_req, res) => {
+/** 疎通確認。deploy.shがデプロイ後に叩く。D1に届かないか、移行が当たっていなければ500になる */
+api.get("/health", async (_req, res) => {
+  await env.DB.prepare("SELECT 1 FROM user LIMIT 1").run();
   res.json({ ok: true });
 });
 
-/** 1回遊ぶ。サインインしていなくても遊べ、サインインしていれば結果を残す */
-api.post("/play", async (req, res) => {
+/** 1回遊ぶ。判定は保存せずに返す。何をどう残すかはゲームごとに決める */
+api.post("/play", (req, res) => {
   const guess: unknown = req.body?.guess;
   // クライアントから来た値は信頼しない。有効かどうかはルール層が決める
   if (!isValidGuess(guess)) return res.status(400).json({ error: "0〜99の整数を選んでください" });
 
-  const result = play(crypto.getRandomValues(new Uint32Array(1))[0], guess);
-  if (req.userId) {
-    await env.DB
-      .prepare("INSERT INTO results (id, user_id, seed, guess, score, created_at) VALUES (?, ?, ?, ?, ?, ?)")
-      .bind(crypto.randomUUID(), req.userId, result.seed, result.guess, result.score, new Date().toISOString())
-      .run();
-  }
-  res.json(result);
-});
-
-api.use("/results", requireUser);
-
-api.get("/results", async (req, res) => {
-  const { results } = await env.DB
-    .prepare("SELECT id, seed, guess, score, created_at AS createdAt FROM results WHERE user_id = ? ORDER BY created_at DESC LIMIT 20")
-    .bind(currentUserId(req))
-    .all();
-  res.json(results);
+  res.json(play(crypto.getRandomValues(new Uint32Array(1))[0], guess));
 });
 
 /** httpServerHandlerがWorkerのfetchイベントとこのポートのサーバーを繋ぐ。実際のソケットは開かない */

@@ -1,6 +1,6 @@
 # browser-game-template
 
-ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Cloudflare Workers + D1 + Better Auth)→ `web`(React + Vite)の3層で、「数を選んで遊ぶ → サーバーで判定する」の一本だけが通っている。Discordでサインインしていれば、結果をD1に残して一覧で見られる。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
+ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Cloudflare Workers + D1 + Better Auth)→ `web`(React + Vite)の3層で、「数を選んで遊ぶ → サーバーで判定する」の一本だけが通っている。認証(Better Auth + Discord)とD1はつないであり、ゲームのデータを残す部分は各ゲームで足す。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
 
 必要なもの: Node.js 22以降。デプロイにはCloudflareのアカウント、サインインにはDiscordのアカウントも要る。
 
@@ -16,7 +16,13 @@ npm install
 
 置換されるのは、npmのルート名・Worker名(`<new>`)・D1名(`<new>`)・画面のタイトル。
 
-`play()`・`isValidGuess()`(`packages/game-rule-engine/src/index.ts`)と`results`テーブル(`packages/api/migrations/0002_results.sql`)は例なので、ゲームのルールとテーブルに置き換える。
+数当ては例なので、ゲームに置き換える。例のコードは次の場所にある。
+
+- ルール: `packages/game-rule-engine/src/index.ts`(`play()`・`isValidGuess()`)とそのテスト
+- API: `packages/api/src/index.ts`の`POST /api/play`
+- 画面: `packages/web/src/pages/HomePage.tsx`と、`packages/web/src/data/apiClient.ts`の`play()`
+
+ゲームのデータを残すときは、`packages/api/migrations/`に`0002_`から移行を足す。`0001`は認証のテーブルなので触らない。ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(req)`で主体を取る。
 
 ## ローカルで動かす
 
@@ -28,7 +34,7 @@ npm run dev   # http://localhost:5173
 
 ## サインインを使う
 
-結果を残すにはDiscordでのサインインが要る。
+ユーザーを識別するには、Discordでのサインインを使う。
 
 [Discord Developer Portal](https://discord.com/developers/applications) でアプリケーションを作り、OAuth2の画面で次を控える・登録する。
 
