@@ -29,4 +29,4 @@ npm run typecheck --workspace api   # apiはテストの代わりに型検査。
 ```
 - テストはNode標準の`node:test`(依存を増やさない)
 - Node.js 22系以降が必要
-- apiもwebも`game-rule-engine`の`dist/`を読む。エンジンのソースを直したらビルドし直す
+- apiは`game-rule-engine`の`dist/`を読む(webは型だけ)。`npm run dev`の最中は監視モードの`tsc`が書き直す。それ以外のときにエンジンのソースを直したら、ビルドし直してからapiの型検査などを行う
