@@ -28,7 +28,11 @@ mkdir -p packages/web/dist
 echo "=== ローカルD1の移行"
 (cd packages/api && npx wrangler d1 migrations apply DB --local)
 
-[ -f packages/api/.dev.vars ] || abort "packages/api/.dev.vars がない。.dev.vars.example をコピーして値を入れること"
+# なければ例をコピーして起動する。サインインしなくても遊べるので、Discordの値は後から入れればよい
+if [ ! -f packages/api/.dev.vars ]; then
+  cp packages/api/.dev.vars.example packages/api/.dev.vars
+  echo "=== packages/api/.dev.vars を .dev.vars.example からコピーした"
+fi
 if grep -q '<ここに' packages/api/.dev.vars; then
   echo "注意: packages/api/.dev.vars にプレースホルダが残っている。サインインは使えない" >&2
 fi

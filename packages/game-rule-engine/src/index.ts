@@ -1,6 +1,11 @@
 /** 1回のプレイの結果 */
 export interface PlayResult {
   seed: number;
+  /** プレイヤーが選んだ数 */
+  guess: number;
+  /** seedから決まる正解 */
+  answer: number;
+  /** 正解との近さ。ぴったりなら99、最も遠ければ0 */
   score: number;
 }
 
@@ -12,7 +17,13 @@ function random(seed: number): number {
   return ((t ^ (t >>> 14)) >>> 0) % 100;
 }
 
+/** プレイヤーの入力として有効か。どんな入力を受け付けるかもゲームのルールなので、ここで決める */
+export function isValidGuess(guess: unknown): guess is number {
+  return Number.isInteger(guess) && (guess as number) >= 0 && (guess as number) <= 99;
+}
+
 /** 1回のプレイを判定する。ゲームのルールに置き換える場所 */
-export function play(seed: number): PlayResult {
-  return { seed, score: random(seed) };
+export function play(seed: number, guess: number): PlayResult {
+  const answer = random(seed);
+  return { seed, guess, answer, score: 99 - Math.abs(answer - guess) };
 }

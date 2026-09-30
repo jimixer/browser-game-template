@@ -1,8 +1,8 @@
 # browser-game-template
 
-ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Cloudflare Workers + D1 + Better Auth)→ `web`(React + Vite)の3層で、「Discordでサインインして遊ぶ → サーバーで判定 → 結果をD1に残す → 一覧で見る」の一本だけが通っている。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
+ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Cloudflare Workers + D1 + Better Auth)→ `web`(React + Vite)の3層で、「数を選んで遊ぶ → サーバーで判定する」の一本だけが通っている。認証(Better Auth + Discord)とD1はつないであり、ゲームのデータを残す部分は各ゲームで足す。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
 
-必要なもの: Node.js 22以降、Cloudflareのアカウント、Discordのアカウント。
+必要なもの: Node.js 22以降。デプロイにはCloudflareのアカウント、サインインにはDiscordのアカウントも要る。
 
 ## このテンプレートから始める
 
@@ -16,23 +16,32 @@ npm install
 
 置換されるのは、npmのルート名・Worker名(`<new>`)・D1名(`<new>`)・画面のタイトル。
 
-`play()`(`packages/game-rule-engine/src/index.ts`)と`results`テーブル(`packages/api/migrations/0002_results.sql`)は例なので、ゲームのルールとテーブルに置き換える。
+数当ては例なので、ゲームに置き換える。例のコードは次の場所にある。
 
-## Discordのアプリを作る
+- ルール: `packages/game-rule-engine/src/index.ts`(`play()`・`isValidGuess()`)とそのテスト
+- API: `packages/api/src/index.ts`の`POST /api/play`
+- 画面: `packages/web/src/pages/HomePage.tsx`と、`packages/web/src/data/apiClient.ts`の`play()`
+
+ゲームのデータを残すときは、`packages/api/migrations/`に`0002_`から移行を足す。`0001`は認証のテーブルなので触らない。ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(req)`で主体を取る。
+
+## ローカルで動かす
+
+```bash
+npm run dev   # http://localhost:5173
+```
+
+これだけで、サインインせずに遊べる。初回は`packages/api/.dev.vars.example`が`packages/api/.dev.vars`(gitignore済み)にコピーされる。
+
+## サインインを使う
+
+ユーザーを識別するには、Discordでのサインインを使う。
 
 [Discord Developer Portal](https://discord.com/developers/applications) でアプリケーションを作り、OAuth2の画面で次を控える・登録する。
 
 - Client ID と Client Secret
 - Redirects に `http://localhost:5173/api/auth/callback/discord`(ローカル用)と `https://<new>.<サブドメイン>.workers.dev/api/auth/callback/discord`(本番用。`<サブドメイン>`は下の「初回のデプロイ」で確認する)
 
-## ローカルで動かす
-
-```bash
-cp packages/api/.dev.vars.example packages/api/.dev.vars   # 値を埋める(gitignore済み)
-npm run dev   # http://localhost:5173
-```
-
-`BETTER_AUTH_SECRET` は `openssl rand -base64 32` で作る。`BETTER_AUTH_URL` はviteの開発サーバーのオリジン(`http://localhost:5173`)のままにしておく。本番URLにすると、Better Authが`Origin`を信頼せずサインインのPOSTが403になる。
+`packages/api/.dev.vars`のClient IDとClient Secretを埋め、`BETTER_AUTH_SECRET`を`openssl rand -base64 32`の出力に置き換えて、`npm run dev`を起動し直す。`BETTER_AUTH_URL`はviteの開発サーバーのオリジン(`http://localhost:5173`)のままにしておく。本番URLにすると、Better Authが`Origin`を信頼せずサインインのPOSTが403になる。
 
 ## 初回のデプロイ
 

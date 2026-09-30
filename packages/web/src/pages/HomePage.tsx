@@ -1,26 +1,25 @@
-import { useEffect, useState } from "react";
+import { useState, type FormEvent } from "react";
 import Button from "../components/Button";
-import { listResults, play } from "../data/apiClient";
+import { play } from "../data/apiClient";
 import { useSession } from "../data/useSession";
-import type { StoredResult } from "../types";
+import type { PlayResult } from "../types";
 
 export default function HomePage() {
-  const { user, loading } = useSession();
-  const [results, setResults] = useState<StoredResult[]>([]);
+  const { loading, failed } = useSession();
+  const [guess, setGuess] = useState("50");
+  const [last, setLast] = useState<PlayResult>();
   const [error, setError] = useState<string>();
 
-  useEffect(() => {
-    if (user) listResults().then(setResults, (e: Error) => setError(e.message));
-  }, [user]);
-
   if (loading) return null;
-  if (!user) return <p>サインインすると遊べます。</p>;
+  if (failed) return <p className="text-danger">サーバーに接続できません。apiが動いているか確認してください。</p>;
 
-  async function onPlay() {
+  async function onPlay(e: FormEvent) {
+    e.preventDefault();
     setError(undefined);
+    setLast(undefined);
     try {
-      await play();
-      setResults(await listResults());
+      // 入力の検証はサーバーが行う。空欄はNumber("")で0にならないよう、NaN(JSONではnull)にして弾かせる
+      setLast(await play(guess === "" ? NaN : Number(guess)));
     } catch (e) {
       setError((e as Error).message);
     }
@@ -28,18 +27,26 @@ export default function HomePage() {
 
   return (
     <div>
-      <Button kind="primary" onClick={() => void onPlay()}>
-        遊ぶ
-      </Button>
+      <p>0〜99のどれかを選んでください。正解に近いほど点が高くなります。</p>
+      <form onSubmit={(e) => void onPlay(e)} className="flex gap-2">
+        <input
+          type="number"
+          min={0}
+          max={99}
+          value={guess}
+          onChange={(e) => setGuess(e.target.value)}
+          aria-label="選ぶ数"
+        />
+        <Button kind="primary" type="submit">
+          遊ぶ
+        </Button>
+      </form>
       {error && <p className="text-danger">{error}</p>}
-      <h2>最近の結果</h2>
-      <ul>
-        {results.map((r) => (
-          <li key={r.id}>
-            {new Date(r.createdAt).toLocaleString()} — {r.score}点
-          </li>
-        ))}
-      </ul>
+      {last && (
+        <p>
+          正解は{last.answer}。{last.score}点
+        </p>
+      )}
     </div>
   );
 }

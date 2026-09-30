@@ -1,5 +1,5 @@
 // APIを呼び出すクライアント。同一オリジンの`/api`配下に置かれる。
-import type { PlayResult, SessionUser, StoredResult } from "../types";
+import type { PlayResult, SessionUser } from "../types";
 
 const BASE_URL = "/api";
 
@@ -16,12 +16,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export async function play(): Promise<PlayResult> {
-  return request("/results", { method: "POST" });
-}
-
-export async function listResults(): Promise<StoredResult[]> {
-  return request("/results");
+export async function play(guess: number): Promise<PlayResult> {
+  return request("/play", { method: "POST", body: JSON.stringify({ guess }) });
 }
 
 /** 未サインインならnull */
