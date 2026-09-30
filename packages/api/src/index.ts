@@ -7,7 +7,7 @@ import { httpServerHandler } from "cloudflare:node";
 import { env } from "cloudflare:workers";
 import express from "express";
 import { toNodeHandler } from "better-auth/node";
-import { play } from "game-rule-engine";
+import { isValidGuess, play } from "game-rule-engine";
 import { auth } from "./auth.js";
 import { attachUser, currentUserId, requireUser } from "./session.js";
 
@@ -27,20 +27,27 @@ api.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-api.use("/results", requireUser);
+/** 1回遊ぶ。サインインしていなくても遊べ、サインインしていれば結果を残す */
+api.post("/play", async (req, res) => {
+  const guess: unknown = req.body?.guess;
+  // クライアントから来た値は信頼しない。有効かどうかはルール層が決める
+  if (!isValidGuess(guess)) return res.status(400).json({ error: "0〜99の整数を選んでください" });
 
-api.post("/results", async (req, res) => {
-  const result = play(crypto.getRandomValues(new Uint32Array(1))[0]);
-  await env.DB
-    .prepare("INSERT INTO results (id, user_id, seed, score, created_at) VALUES (?, ?, ?, ?, ?)")
-    .bind(crypto.randomUUID(), currentUserId(req), result.seed, result.score, new Date().toISOString())
-    .run();
-  res.status(201).json(result);
+  const result = play(crypto.getRandomValues(new Uint32Array(1))[0], guess);
+  if (req.userId) {
+    await env.DB
+      .prepare("INSERT INTO results (id, user_id, seed, guess, score, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+      .bind(crypto.randomUUID(), req.userId, result.seed, result.guess, result.score, new Date().toISOString())
+      .run();
+  }
+  res.json(result);
 });
+
+api.use("/results", requireUser);
 
 api.get("/results", async (req, res) => {
   const { results } = await env.DB
-    .prepare("SELECT id, seed, score, created_at AS createdAt FROM results WHERE user_id = ? ORDER BY created_at DESC LIMIT 20")
+    .prepare("SELECT id, seed, guess, score, created_at AS createdAt FROM results WHERE user_id = ? ORDER BY created_at DESC LIMIT 20")
     .bind(currentUserId(req))
     .all();
   res.json(results);

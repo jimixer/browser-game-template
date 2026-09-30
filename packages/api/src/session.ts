@@ -1,6 +1,6 @@
 /**
  * リクエストの主体を決める継ぎ目。セッションはBetter Authが管理するCookieから引く。
- * ハンドラは`currentUserId(req)`だけを見る。
+ * サインインが必須のハンドラは`currentUserId(req)`を、任意のハンドラは`req.userId`を見る。
  */
 import type { RequestHandler, Request } from "express";
 import { fromNodeHeaders } from "better-auth/node";

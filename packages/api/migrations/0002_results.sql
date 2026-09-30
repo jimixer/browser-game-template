@@ -3,7 +3,9 @@
 CREATE TABLE results (
   id         TEXT PRIMARY KEY,
   user_id    TEXT NOT NULL,
+  -- seedとguessが残っていれば、あとから判定をサーバーで再現して検証できる
   seed       INTEGER NOT NULL,
+  guess      INTEGER NOT NULL,
   score      INTEGER NOT NULL,
   created_at TEXT NOT NULL
 );
