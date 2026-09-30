@@ -5,7 +5,7 @@
 import { httpServerHandler } from "cloudflare:node";
 // httpServerHandler経由のExpressのハンドラはWorkerのenvを引数で受け取らないので、モジュールレベルのenvから取る
 import { env } from "cloudflare:workers";
-import express from "express";
+import express, { type ErrorRequestHandler } from "express";
 import { toNodeHandler } from "better-auth/node";
 import { isValidGuess, play } from "game-rule-engine";
 import { auth } from "./auth.js";
@@ -37,6 +37,17 @@ api.post("/play", (req, res) => {
 
   res.json(play(crypto.getRandomValues(new Uint32Array(1))[0], guess));
 });
+
+/**
+ * 最後の砦。Expressの既定のハンドラはNODE_ENVがproductionでないとスタックトレースを応答に含め、
+ * WorkersはNODE_ENVを設定しない。中身はログにだけ残し、webのapiClientが読む`{error}`の形で返す
+ */
+const onError: ErrorRequestHandler = (err, _req, res, next) => {
+  console.error(err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: "サーバーでエラーが起きました" });
+};
+app.use(onError);
 
 /** httpServerHandlerがWorkerのfetchイベントとこのポートのサーバーを繋ぐ。実際のソケットは開かない */
 const PORT = 8787;
