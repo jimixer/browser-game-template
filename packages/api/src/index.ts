@@ -19,7 +19,7 @@ app.all("/api/auth/*splat", (req, res) => toNodeHandler(auth())(req, res));
 app.use(express.json());
 app.use(attachUser);
 
-/** すべてのエンドポイントは/api配下に置く。Pagesはパスを書き換えずそのまま転送する */
+/** すべてのエンドポイントは/api配下に置く。wrangler.jsoncのrun_worker_firstで/api/*だけがこのWorkerに届く */
 const api = express.Router();
 app.use("/api", api);
 

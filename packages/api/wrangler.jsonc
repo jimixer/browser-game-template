@@ -1,13 +1,21 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "browser-game-template-api",
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "browser-game-template",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
   // node:http を使うため。httpServerHandler には 2025-08-15 以降の互換性日付が要る
   "compatibility_flags": ["nodejs_compat"],
+  // webのビルド結果も同じWorkerから配る(docs/adr/0001-workers-static-assets.md)
+  "assets": {
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    // /api/* だけWorkerへ。それ以外は静的ファイルか、見つからなければindex.html
+    "run_worker_first": ["/api/*"]
+  },
   // 公開して差し支えない値。シークレットは wrangler secret put で入れる
   "vars": {
-    "BETTER_AUTH_URL": "https://browser-game-template-web.pages.dev"
+    // <サブドメイン> はダッシュボードの Workers & Pages に出るアカウントのworkers.devサブドメイン
+    "BETTER_AUTH_URL": "https://browser-game-template.<サブドメイン>.workers.dev"
   },
   "secrets": {
     "required": ["BETTER_AUTH_SECRET", "DISCORD_CLIENT_ID", "DISCORD_CLIENT_SECRET"]

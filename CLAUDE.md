@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 ## プロジェクト概要
-ブラウザゲームの雛形。ゲームルール層・アプリケーション層・UI層の3パッケージに分け、Cloudflare(Workers + D1 + Pages)にデプロイする。認証はBetter Auth + Discord OAuth。
+ブラウザゲームの雛形。ゲームルール層・アプリケーション層・UI層の3パッケージに分け、Cloudflare(Workers + D1)にデプロイする。webのビルド結果はapiのWorkerがWorkers Static Assetsで一緒に配る。認証はBetter Auth + Discord OAuth。
 
 新しいゲームを始めるときは README の「このテンプレートから始める」を参照。
 
@@ -11,7 +11,7 @@ docs/adr/                  確定した決定の記録(棄却案とその理由�
 packages/
   game-rule-engine/        ゲームルール層(DB/API/インフラに非依存の純粋なTypeScript)
   api/                     アプリケーション層(Express on Cloudflare Workers、D1、Better Auth)
-  web/                     UI層(React + Vite + Tailwind、Cloudflare Pages)
+  web/                     UI層(React + Vite + Tailwind)
 scripts/                   ローカル起動とデプロイ
 ```
 
