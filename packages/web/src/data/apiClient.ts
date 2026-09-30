@@ -4,13 +4,12 @@ import type { PlayResult, SessionUser } from "../types";
 const BASE_URL = "/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // 呼び出し側がヘッダーを渡しても、既定のContent-Typeを落とさない
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}${path}`, {
-      headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(10_000),
-      ...init,
-    });
+    res = await fetch(`${BASE_URL}${path}`, { signal: AbortSignal.timeout(10_000), ...init, headers });
   } catch (e) {
     console.error(e);
     throw new Error(
