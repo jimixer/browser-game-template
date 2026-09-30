@@ -1,4 +1,4 @@
-# Pagesが全レスポンスに付けるヘッダ。
+# Workerが静的ファイルの応答に付けるヘッダ(docs/adr/0001-workers-static-assets.md)。
 # style-src の 'unsafe-inline' は style= 属性のため。
 # base-uri と frame-ancestors は default-src にフォールバックしないので個別に書く。
 /*

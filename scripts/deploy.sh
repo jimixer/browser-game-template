@@ -19,6 +19,9 @@ branch=$(git rev-parse --abbrev-ref HEAD)
 step "テスト"
 npm test --workspaces --if-present
 
+step "lint"
+npm run lint --workspaces --if-present
+
 # wrangler deployは型を検査せずに束ねるので、ここで通す
 step "apiの型検査"
 npm run typecheck --workspace api
