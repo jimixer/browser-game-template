@@ -39,9 +39,7 @@ export async function play(guess: number): Promise<PlayResult> {
 
 /** 未サインインならnull */
 export async function getSession(): Promise<{ user: SessionUser } | null> {
-  const res = await fetch(`${BASE_URL}/auth/get-session`);
-  if (!res.ok) throw new Error(`API error ${res.status}: /auth/get-session`);
-  return res.json();
+  return request("/auth/get-session");
 }
 
 /** Discordの認可画面へ送る。Better Authが飛ばし先のURLを組み立てる */
