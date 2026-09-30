@@ -38,7 +38,7 @@ if grep -q '<ここに' packages/api/.dev.vars; then
 fi
 
 # 標準入力は端末から切り離す。ジョブ制御のもとでは2つとも前面ではないプロセスグループになり、
-# wranglerとviteがキー操作のために端末を読みにいくとSIGTTINで止まる(waitが戻り、スクリプトごと終わってしまう)
+# wranglerとviteがキー操作のために端末を読みにいくとSIGTTINで止まったまま応答しなくなる
 npx tsc -p packages/game-rule-engine/tsconfig.json --watch --preserveWatchOutput </dev/null &
 engine=$!
 (cd packages/api && npm run dev) </dev/null &
@@ -54,5 +54,8 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "=== web http://localhost:5173 / api http://localhost:8787"
-# どれかが落ちたら、残りも止めて終わる(一部だけ動いている状態を残さない)
-wait -n
+# どれかが落ちたら、残りも止めて終わる(一部だけ動いている状態を残さない)。
+# wait -n はmacOS標準のbash 3.2にないので、生きているかを見て回る
+while kill -0 "$engine" 2>/dev/null && kill -0 "$api" 2>/dev/null && kill -0 "$web" 2>/dev/null; do
+  sleep 1
+done

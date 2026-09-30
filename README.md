@@ -10,7 +10,7 @@ GitHubの「Use this template」で自分のリポジトリを作ってcloneし�
 
 ```bash
 git clone <自分のリポジトリ> <new> && cd <new>
-git grep -l browser-game-template -- ':!README.md' | xargs sed -i 's/browser-game-template/<new>/g'
+git grep -l browser-game-template -- ':!README.md' | xargs perl -pi -e 's/browser-game-template/<new>/g'
 npm install
 ```
 
