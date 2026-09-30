@@ -2,7 +2,7 @@
  * Better Authのインスタンス。Discord OAuthでサインインする。
  * D1バインディングをそのまま渡すと、Better Auth側がD1として認識する。
  *
- * `basePath`は既定の`/api/auth`のまま使う。Pagesはパスを書き換えずに転送するので、
+ * `basePath`は既定の`/api/auth`のまま使う。静的ファイルと同じWorkerが受けるので、
  * Discordに登録するリダイレクトURIと、Workerが実際に受け取るパスが一致する。
  */
 import { betterAuth } from "better-auth";
