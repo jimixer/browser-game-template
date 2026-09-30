@@ -32,6 +32,8 @@ app.post("/play", async (c) => {
   return c.json(play(crypto.getRandomValues(new Uint32Array(1))[0], guess));
 });
 
+app.notFound((c) => c.json({ error: "そのAPIはありません" }, 404));
+
 /** 最後の砦。中身はログにだけ残し、webのapiClientが読む`{error}`の形で返す */
 app.onError((err, c) => {
   console.error(err);
