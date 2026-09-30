@@ -22,7 +22,21 @@ npm install
 - API: `packages/api/src/index.ts`の`POST /api/play`
 - 画面: `packages/web/src/pages/HomePage.tsx`と、`packages/web/src/data/apiClient.ts`の`play()`
 
-ゲームのデータを残すときは、`packages/api/migrations/`に`0002_`から移行を足す。`0001`は認証のテーブルなので触らない。ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(c)`で主体を取る。
+### ゲームの状態を残す
+
+この雛形は、1回の操作ごとにapiへ問い合わせてサーバーで判定する。往復に数十〜数百ミリ秒かかってよいゲーム(ターン制のゲーム、複数人で同じボスを叩くマルチバトルなど)に向く。サーバーが1秒に数十回状態を進めるような、反応の厳しいアクションゲームは対象外。
+
+状態はまずD1に残す。
+
+- `packages/api/migrations/`に`0002_`から移行を足す。`0001`は認証のテーブルなので触らない。
+- ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(c)`で主体を取る。
+- サインインしていないゲストにはユーザーIDがない。ゲストの状態も残すなら、ゲームのIDを発行してクライアントに持たせる。
+- 複数人が同時に書き換える値(ボスのHPなど)は、`UPDATE ... SET hp = hp - ? ... RETURNING hp`のようにSQL 1文で書き換える。読んで、ルール層で計算して、書き戻すと、間に入った他のリクエストの更新が消える。
+
+次のどちらかに当てはまったら、共有する状態をDurable Objectsに移す。1つのバトルを1つのDurable Objectにすると、そのバトルへの操作が1か所で順に処理される。
+
+- 共有する状態を、SQL 1文ではなくルール層で計算して書き換える必要がある。
+- 他の人の操作を、問い合わせを待たずにすぐ届けたい(WebSocket)。Workerは`stub.fetch(c.req.raw)`でリクエストをそのままDurable Objectへ渡す。
 
 画面は同じオリジンの資源しか読めない(`packages/web/public/_headers`のCSP)。外部のフォント・画像・CDNを使うときは、そのオリジンをCSPに足す。足さないと、画面には何も出ずにブラウザのコンソールにだけエラーが出る。
 
