@@ -52,7 +52,7 @@ npm install
 npm run dev   # http://localhost:5173
 ```
 
-これだけで、サインインせずに遊べる。初回は`packages/api/.dev.vars.example`が`packages/api/.dev.vars`(gitignore済み)にコピーされる。
+これだけで、サインインせずに遊べる。初回は`packages/api/.dev.vars.example`から`packages/api/.dev.vars`(gitignore済み)が作られ、`BETTER_AUTH_SECRET`も生成される。
 
 ## サインインを使う
 
@@ -63,7 +63,7 @@ npm run dev   # http://localhost:5173
 - Client ID と Client Secret
 - Redirects に `http://localhost:5173/api/auth/callback/discord`(ローカル用)と `https://<new>.<サブドメイン>.workers.dev/api/auth/callback/discord`(本番用。`<サブドメイン>`は下の「初回のデプロイ」で確認する)
 
-`packages/api/.dev.vars`のClient IDとClient Secretを埋め、`BETTER_AUTH_SECRET`を`openssl rand -base64 32`の出力に置き換えて、`npm run dev`を起動し直す。`BETTER_AUTH_URL`はviteの開発サーバーのオリジン(`http://localhost:5173`)のままにしておく。本番URLにすると、Better Authが`Origin`を信頼せずサインインのPOSTが403になる。
+`packages/api/.dev.vars`のClient IDとClient Secretを埋めて、`npm run dev`を起動し直す。`BETTER_AUTH_URL`はviteの開発サーバーのオリジン(`http://localhost:5173`)のままにしておく。本番URLにすると、Better Authが`Origin`を信頼せずサインインのPOSTが403になる。
 
 ## 初回のデプロイ
 

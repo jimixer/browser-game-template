@@ -33,8 +33,10 @@ echo "=== ローカルD1の移行"
 
 # なければ例をコピーして起動する。サインインしなくても遊べるので、Discordの値は後から入れればよい
 if [ ! -f packages/api/.dev.vars ]; then
-  cp packages/api/.dev.vars.example packages/api/.dev.vars
-  echo "=== packages/api/.dev.vars を .dev.vars.example からコピーした"
+  # BETTER_AUTH_SECRETはここで作る。プレースホルダのままだとBetter Authが起動のたびに警告を出す
+  secret=$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("base64"))')
+  sed "s|^BETTER_AUTH_SECRET=.*|BETTER_AUTH_SECRET=$secret|" packages/api/.dev.vars.example > packages/api/.dev.vars
+  echo "=== packages/api/.dev.vars を .dev.vars.example から作った"
 fi
 if grep -q '<ここに' packages/api/.dev.vars; then
   echo "注意: packages/api/.dev.vars にプレースホルダが残っている。サインインは使えない" >&2
