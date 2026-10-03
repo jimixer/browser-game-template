@@ -106,7 +106,7 @@ app.notFound((c) => c.json({ error: "そのAPIはありません。URLとメソ�
 /** 最後の砦。中身はログにだけ残し、webのapiClientが読む`{error}`の形で返す */
 app.onError((err, c) => {
   console.error(err);
-  return c.json({ error: "サーバーでエラーが起きました" }, 500);
+  return c.json({ error: "サーバーでエラーが起きました。しばらくしてからもう一度お試しください" }, 500);
 });
 
 export default app;

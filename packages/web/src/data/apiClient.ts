@@ -33,7 +33,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(
       res.status >= 500
         ? "サーバーで問題が起きています。しばらくしてからもう一度お試しください"
-        : "リクエストを受け付けられませんでした",
+        : "リクエストを受け付けられませんでした。画面を読み直して、もう一度お試しください",
     );
   }
   return res.json();
