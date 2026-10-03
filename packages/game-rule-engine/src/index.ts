@@ -1,14 +1,3 @@
-/** 1回のプレイの結果 */
-export interface PlayResult {
-  seed: number;
-  /** プレイヤーが選んだ数 */
-  guess: number;
-  /** seedから決まる正解 */
-  answer: number;
-  /** 正解との近さ。ぴったりなら99、最も遠ければ0 */
-  score: number;
-}
-
 /** 同じseedからは常に同じ0〜99の値を返す疑似乱数(mulberry32) */
 function random(seed: number): number {
   let t = (seed + 0x6d2b79f5) >>> 0;
@@ -20,12 +9,6 @@ function random(seed: number): number {
 /** プレイヤーの入力として有効か。どんな入力を受け付けるかもゲームのルールなので、ここで決める */
 export function isValidGuess(guess: unknown): guess is number {
   return Number.isInteger(guess) && (guess as number) >= 0 && (guess as number) <= 99;
-}
-
-/** 1回のプレイを判定する。ゲームのルールに置き換える場所 */
-export function play(seed: number, guess: number): PlayResult {
-  const answer = random(seed);
-  return { seed, guess, answer, score: 99 - Math.abs(answer - guess) };
 }
 
 /** 1ゲームで選べる回数。使い切ると負け */
@@ -57,6 +40,7 @@ export interface GameView {
   score?: number;
 }
 
+/** 新しいゲームを作る。正解はseedから決まる */
 export function newGame(seed: number): GameState {
   return { answer: random(seed), guesses: [] };
 }

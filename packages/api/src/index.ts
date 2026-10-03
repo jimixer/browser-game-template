@@ -3,7 +3,7 @@
  * 判定はすべてこのサーバー側でgame-rule-engineを呼んで行う(サーバー権威)。
  */
 import { Hono } from "hono";
-import { applyGuess, isValidGuess, newGame, play, status, view, type GameState } from "game-rule-engine";
+import { applyGuess, isValidGuess, newGame, status, view, type GameState } from "game-rule-engine";
 import { auth } from "./auth.js";
 import { attachUser, currentUserId, requireUser, type AppEnv } from "./session.js";
 
@@ -19,28 +19,6 @@ app.use(attachUser);
 app.get("/health", async (c) => {
   await c.env.DB.prepare("SELECT 1 FROM user LIMIT 1").run();
   return c.json({ ok: true });
-});
-
-/** 1回遊ぶ。サインインしていれば自己ベストを更新し、更新後の値を`best`で返す。ゲストは記録しない */
-app.post("/play", async (c) => {
-  // JSONとして読めない本文も、不正な入力として400で弾く
-  const body = await c.req.json().catch(() => null);
-  const guess: unknown = body?.guess;
-  // クライアントから来た値は信頼しない。有効かどうかはルール層が決める
-  if (!isValidGuess(guess)) return c.json({ error: "0〜99の整数を選んでください" }, 400);
-
-  const result = play(crypto.getRandomValues(new Uint32Array(1))[0], guess);
-  const userId = c.get("userId");
-  if (!userId) return c.json(result);
-  // 読んでから比べて書き戻すと、同じユーザーの並行したリクエストが互いの更新を消す。比較もSQL 1文の中で行う
-  const row = await c.env.DB.prepare(
-    `INSERT INTO best_score (user_id, score) VALUES (?, ?)
-     ON CONFLICT (user_id) DO UPDATE SET score = max(score, excluded.score)
-     RETURNING score`,
-  )
-    .bind(userId, result.score)
-    .first<{ score: number }>();
-  return c.json({ ...result, best: row!.score });
 });
 
 function randomSeed(): number {

@@ -1,21 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { applyGuess, isValidGuess, MAX_GUESSES, newGame, play, view } from "./index.js";
+import { applyGuess, isValidGuess, MAX_GUESSES, newGame, view } from "./index.js";
 
-test("同じ入力なら同じ結果になる", () => {
-  assert.deepEqual(play(42, 10), play(42, 10));
+test("同じseedなら同じ正解になる", () => {
+  assert.equal(newGame(42).answer, newGame(42).answer);
 });
 
-test("スコアは0〜99に収まる", () => {
+test("正解は0〜99に収まる", () => {
   for (let seed = 0; seed < 1000; seed++) {
-    const { score } = play(seed, seed % 100);
-    assert.ok(score >= 0 && score < 100);
+    const { answer } = newGame(seed);
+    assert.ok(answer >= 0 && answer < 100);
   }
-});
-
-test("正解なら99点", () => {
-  const { answer } = play(42, 0);
-  assert.equal(play(42, answer).score, 99);
 });
 
 test("0〜99の整数だけを入力として受け付ける", () => {

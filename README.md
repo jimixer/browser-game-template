@@ -1,6 +1,6 @@
 # browser-game-template
 
-ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Hono on Cloudflare Workers + D1 + Better Auth、[ADR 0002](docs/adr/0002-hono.md))→ `web`(React + Vite)の3層で、「数を選んで遊ぶ → サーバーで判定する → サインインしていれば自己ベストをD1に残す」の一本だけが通っている。認証はBetter Auth + Discord。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
+ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Hono on Cloudflare Workers + D1 + Better Auth、[ADR 0002](docs/adr/0002-hono.md))→ `web`(React + Vite)の3層で、「ゲームを始める → 1手ずつサーバーで判定して状態をD1に残す → 勝てば、サインインしているときだけ自己ベストを残す」の一本だけが通っている。例は、ヒントを頼りに0〜99の数を10回までに当てるゲーム。認証はBetter Auth + Discord。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
 
 必要なもの: Node.js 22.12以降。デプロイにはCloudflareのアカウント、サインインにはDiscordのアカウントも要る。
 
@@ -18,12 +18,12 @@ npm install
 
 数当ては例なので、ゲームに置き換える。例のコードは次の場所にある。
 
-- ルール: `packages/game-rule-engine/src/index.ts`(`play()`・`isValidGuess()`)とそのテスト
-- API: `packages/api/src/index.ts`の`POST /api/play`と`GET /api/best`
-- 移行: `packages/api/migrations/0002_best_score.sql`
-- 画面: `packages/web/src/pages/HomePage.tsx`と、`packages/web/src/data/apiClient.ts`の`play()`・`getBest()`
+- ルール: `packages/game-rule-engine/src/index.ts`(`newGame()`・`applyGuess()`・`view()`など)とそのテスト
+- API: `packages/api/src/index.ts`の`/api/games`配下と`GET /api/best`
+- 移行: `packages/api/migrations/0002_best_score.sql`と`0003_example_game.sql`
+- 画面: `packages/web/src/pages/`の`HomePage.tsx`・`GamePage.tsx`、`components/NewGameButton.tsx`と、`packages/web/src/data/apiClient.ts`のゲームと自己ベストの関数
 
-自己ベストのテーブルが要らなくなっても、`0002`は消さず書き換えず、`0003_`の移行で`DROP TABLE best_score;`する。`npm run dev`の時点でローカルのD1には当たっているので、書き換えても反映されない。
+例のテーブルが要らなくなっても、`0002`・`0003`は消さず書き換えず、`0004_`の移行で`DROP TABLE example_game;`のようにする。`npm run dev`の時点でローカルのD1には当たっているので、書き換えても反映されない。
 
 ### ゲームの状態を残す
 
@@ -31,9 +31,10 @@ npm install
 
 状態はまずD1に残す。
 
-- `packages/api/migrations/`に`0003_`から移行を足す。`0001`は認証のテーブル、`0002`は自己ベストの例。
-- ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(c)`で主体を取る(例: `GET /api/best`)。サインインが任意のルートは`c.get("userId")`を見る(例: `POST /api/play`)。
-- サインインしていないゲストにはユーザーIDがない。ゲストの状態も残すなら、ゲームのIDを発行してクライアントに持たせる。
+- `packages/api/migrations/`に`0004_`から移行を足す。`0001`は認証のテーブル、`0002`は自己ベスト、`0003`はゲームの状態の例。
+- ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(c)`で主体を取る(例: `GET /api/best`)。サインインが任意のルートは`c.get("userId")`を見る(例: `POST /api/games/:id/guesses`)。
+- サインインしていないゲストにはユーザーIDがない。ゲストの状態も残すなら、ゲームのIDを発行してクライアントに持たせる(例: `POST /api/games`がUUIDを返し、画面はそれを`/games/:id`のURLに持つ)。IDを知っていれば誰でもそのゲームを操作できるので、推測できない値にする。
+- 1人で遊ぶゲームの状態は、読んで、ルール層で進めて、読んだときと同じ状態のときだけ書き戻す(`UPDATE ... WHERE id = ? AND state = ?`)。別のタブなどから先に進んでいたら1行も変わらないので、409で読み直しを促す。
 - 複数人が同時に書き換える値(ボスのHPなど)は、`UPDATE ... SET hp = hp - ? ... RETURNING hp`のようにSQL 1文で書き換える。読んで、ルール層で計算して、書き戻すと、間に入った他のリクエストの更新が消える。
 
 次のどちらかに当てはまったら、共有する状態をDurable Objectsに移す。1つのバトルを1つのDurable Objectにすると、そのバトルへの操作が1か所で順に処理される。
