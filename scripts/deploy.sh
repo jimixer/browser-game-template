@@ -30,7 +30,7 @@ npm run lint --workspaces --if-present
 step "apiの型検査"
 npm run typecheck --workspace api
 
-# webのテストは型検査を含まないので、ビルドをここで通す。dist/ はWorkerが静的ファイルとして配る中身でもある
+# webには型検査だけのコマンドがないので、ビルド(tsc -b)で型を通す。dist/ はWorkerが静的ファイルとして配る中身でもある
 step "webのビルド"
 npm run build --workspace web
 

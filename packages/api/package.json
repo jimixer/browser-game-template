@@ -4,6 +4,9 @@
   "description": "アプリケーション層。game-rule-engineを呼ぶHonoのアプリをCloudflare WorkersのWorkerとして動かす",
   "type": "module",
   "private": true,
+  "exports": {
+    "./responses": "./src/responses.ts"
+  },
   "engines": {
     "node": ">=22.12.0"
   },

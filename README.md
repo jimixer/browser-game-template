@@ -18,12 +18,12 @@ npm install
 
 数当ては例なので、ゲームに置き換える。例のコードは次の場所にある。
 
-- ルール: `packages/game-rule-engine/src/index.ts`(`newGame()`・`applyGuess()`・`view()`など)とそのテスト
-- API: `packages/api/src/index.ts`の`/api/games`配下と`GET /api/best`
+- ルール: `packages/game-rule-engine/src/index.ts`(`newGame()`・`applyGuess()`・`view()`など)とそのテスト。webも`MIN_GUESS`・`MAX_GUESS`・`MAX_GUESSES`・`GameView`・`Hint`を読む
+- API: `packages/api/src/index.ts`の`/api/games`配下と`GET /api/best`、応答の型を置く`packages/api/src/responses.ts`
 - 移行: `packages/api/migrations/0002_example_best_score.sql`と`0003_example_game.sql`
-- 画面: `packages/web/src/pages/`の`HomePage.tsx`・`GamePage.tsx`、`components/NewGameButton.tsx`と、`packages/web/src/data/apiClient.ts`のゲームと自己ベストの関数
+- 画面: `packages/web/src/App.tsx`の`/games/:id`のルート、`packages/web/src/pages/`の`HomePage.tsx`・`GamePage.tsx`、`components/`の`NewGameButton.tsx`・`BestScore.tsx`と、`packages/web/src/data/apiClient.ts`のゲームと自己ベストの関数
 
-例のテーブルが要らなくなっても、`0002`・`0003`は消さず書き換えず、`0004_`の移行で`DROP TABLE example_game;`のようにする。`npm run dev`の時点でローカルのD1には当たっているので、書き換えても反映されない。
+まだ本番にデプロイしていなければ、例の移行(`0002`・`0003`)は消しても書き換えてもよい。ローカルのD1には`npm run dev`の時点で当たっているので、`packages/api/.wrangler/`を消してから`npm run dev`を起動し直すと、移行を当て直したD1になる。一度でも本番に当てたら、移行は消さず書き換えず、`0004_`の移行で`DROP TABLE example_game;`のようにする。
 
 ### ゲームの状態を残す
 
@@ -74,7 +74,7 @@ npx wrangler d1 create <new>              # 出力の database_id を wrangler.j
 npx wrangler secret put BETTER_AUTH_SECRET  # DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET も同様
 ```
 
-3つとも入れないとデプロイできない。サインインをまだ使わないなら、Discordの2つは適当な値でよい(サインインだけが失敗し、ゲームは遊べる)。後から`secret put`し直せば、デプロイし直さずに有効になる。
+3つとも入れないとデプロイできない。サインインをまだ使わないなら、Discordの2つには`<未設定>`のように`<`で始まる値を入れる。その間は、サインインを押すと設定されていない旨が出て、ゲームは遊べる。後から`secret put`し直せば、デプロイし直さずに有効になる。
 
 アカウントの`workers.dev`サブドメインを、ダッシュボードの Workers & Pages で確認する。`packages/api/wrangler.jsonc` の `BETTER_AUTH_URL` にある `<サブドメイン>` をそれに置き換え、そのURLに`/api/auth/callback/discord`を付けたものをDiscordのRedirectsにも足す。サブドメインはアカウントごとなので、Worker名が他のユーザーと衝突することはない。
 
