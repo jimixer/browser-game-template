@@ -66,12 +66,12 @@ function hint(answer: number, guess: number): Hint {
 }
 
 export function view(state: GameState): GameView {
-  const s = status(state);
+  const outcome = status(state);
   return {
-    status: s,
+    status: outcome,
     guesses: state.guesses.map((guess) => ({ guess, hint: hint(state.answer, guess) })),
     remaining: MAX_GUESSES - state.guesses.length,
-    ...(s !== "playing" && { answer: state.answer }),
-    ...(s === "won" && { score: MAX_GUESSES - state.guesses.length + 1 }),
+    ...(outcome !== "playing" && { answer: state.answer }),
+    ...(outcome === "won" && { score: MAX_GUESSES - state.guesses.length + 1 }),
   };
 }
