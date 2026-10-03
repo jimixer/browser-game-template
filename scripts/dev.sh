@@ -23,6 +23,10 @@ npm run build --workspace game-rule-engine
 # wrangler devはassetsのディレクトリがないと起動しない。画面はviteが配るので中身は空でよい
 mkdir -p packages/web/dist
 
+# apiの型(Env・cloudflare:workers)はwrangler.jsoncから作る。gitignore済みなので、cloneした直後はエディタでapiが型エラーになる
+echo "=== apiの型の生成"
+(cd packages/api && npx wrangler types)
+
 # 移行を当てていないローカルD1は、新しいコードが読むテーブルを持たない
 echo "=== ローカルD1の移行"
 (cd packages/api && npx wrangler d1 migrations apply DB --local)
