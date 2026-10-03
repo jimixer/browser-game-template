@@ -2,7 +2,7 @@
 
 ブラウザゲームの雛形。`game-rule-engine`(純粋なルール層)→ `api`(Hono on Cloudflare Workers + D1 + Better Auth、[ADR 0002](docs/adr/0002-hono.md))→ `web`(React + Vite)の3層で、「ゲームを始める → 1手ずつサーバーで判定して状態をD1に残す → 勝てば、サインインしているときだけ自己ベストを残す」の一本だけが通っている。例は、ヒントを頼りに0〜99の数を10回までに当てるゲーム。認証はBetter Auth + Discord。webのビルド結果はapiのWorkerが静的ファイルとして一緒に配る([ADR 0001](docs/adr/0001-workers-static-assets.md))。
 
-必要なもの: Node.js 22.12以降。デプロイにはCloudflareのアカウント、サインインにはDiscordのアカウントも要る。
+必要なもの: Node.js 22.12以降とbash(macOS・Linux・WindowsならWSL)。デプロイにはCloudflareのアカウント、サインインにはDiscordのアカウントも要る。
 
 ## このテンプレートから始める
 
@@ -14,7 +14,7 @@ git grep -l browser-game-template -- ':!README.md' | xargs perl -pi -e 's/browse
 npm install
 ```
 
-置換されるのは、npmのルート名・Worker名(`<new>`)・D1名(`<new>`)・画面のタイトル。
+置換されるのは、npmのルート名(`package-lock.json`の中も)・Worker名(`<new>`)・D1名(`<new>`)・画面のタイトル。
 
 数当ては例なので、ゲームに置き換える。例のコードは次の場所にある。
 
@@ -23,7 +23,7 @@ npm install
 - 移行: `packages/api/migrations/0002_example_best_score.sql`と`0003_example_game.sql`
 - 画面: `packages/web/src/App.tsx`の`/games/:id`のルート、`packages/web/src/pages/`の`HomePage.tsx`・`GamePage.tsx`、`components/`の`NewGameButton.tsx`・`BestScore.tsx`と、`packages/web/src/data/apiClient.ts`のゲームと自己ベストの関数
 
-まだ本番にデプロイしていなければ、例の移行(`0002`・`0003`)は消しても書き換えてもよい。ローカルのD1には`npm run dev`の時点で当たっているので、`packages/api/.wrangler/`を消してから`npm run dev`を起動し直すと、移行を当て直したD1になる。一度でも本番に当てたら、移行は消さず書き換えず、`0004_`の移行で`DROP TABLE example_game;`のようにする。
+まだ本番にデプロイしていなければ、例の移行(`0002`・`0003`)は消しても書き換えてもよい。消したら、ゲームの移行は`0002_`から足す。ローカルのD1には`npm run dev`の時点で当たっているので、`packages/api/.wrangler/`を消してから`npm run dev`を起動し直すと、移行を当て直したD1になる。一度でも本番に当てたら、移行は消さず書き換えず、`0004_`以降の移行で`DROP TABLE example_game;`のようにする。
 
 ### ゲームの状態を残す
 
@@ -31,7 +31,7 @@ npm install
 
 状態はまずD1に残す。
 
-- `packages/api/migrations/`に`0004_`から移行を足す。`0001`は認証のテーブル、`0002`は自己ベスト、`0003`はゲームの状態の例。
+- `packages/api/migrations/`に移行を足す。`0001`は認証のテーブル、`0002`(自己ベスト)と`0003`(ゲームの状態)は例。番号は、例の移行を残していれば`0004_`、消していれば`0002_`から。
 - ユーザーごとのデータを扱うルートには`requireUser`(`packages/api/src/session.ts`)を掛け、`currentUserId(c)`で主体を取る(例: `GET /api/best`)。サインインが任意のルートは`c.get("userId")`を見る(例: `POST /api/games/:id/guesses`)。
 - サインインしていないゲストにはユーザーIDがない。ゲストの状態も残すなら、ゲームのIDを発行してクライアントに持たせる(例: `POST /api/games`がUUIDを返し、画面はそれを`/games/:id`のURLに持つ)。IDを知っていれば誰でもそのゲームを操作できるので、推測できない値にする。
 - 1人で遊ぶゲームの状態は、読んで、ルール層で進めて、読んだときと同じ状態のときだけ書き戻す(`UPDATE ... WHERE id = ? AND state = ?`)。別のタブなどから先に進んでいたら1行も変わらないので、409で読み直しを促す。
