@@ -1,22 +1,13 @@
-import { useState, type JSX } from "react";
+import type { JSX } from "react";
+import { useAction } from "../data/useAction";
 import { useSession } from "../data/useSession";
 import Button from "./Button";
 
 /** ヘッダー右端のサインイン状態表示。戻り値の型を書いておくと、扱っていない状態を型検査が示す */
 export default function SessionControl(): JSX.Element | null {
   const { state, signIn, signOut } = useSession();
-  const [error, setError] = useState<string>();
-
-  /** 成功すればページごと移るので、ここに戻るのは失敗したときだけ */
-  async function attempt(action: () => Promise<void>, message: string) {
-    setError(undefined);
-    try {
-      await action();
-    } catch (e) {
-      console.error(e);
-      setError(message);
-    }
-  }
+  // 成功すればページごと移るので、errorが入るのは失敗したときだけ
+  const { error, pending, run } = useAction();
 
   switch (state.status) {
     case "loading":
@@ -28,7 +19,7 @@ export default function SessionControl(): JSX.Element | null {
       return (
         <div className="flex min-w-0 items-center gap-2 text-sm">
           {error && <span className="text-danger">{error}</span>}
-          <Button kind="primary" small onClick={() => void attempt(signIn, "サインインできませんでした")}>
+          <Button kind="primary" small disabled={pending} onClick={() => void run(signIn)}>
             Discordでサインイン
           </Button>
         </div>
@@ -38,7 +29,7 @@ export default function SessionControl(): JSX.Element | null {
         <div className="flex min-w-0 items-center gap-2 text-sm">
           {error && <span className="text-danger">{error}</span>}
           <span className="truncate">{state.user.name}</span>
-          <Button small onClick={() => void attempt(signOut, "サインアウトできませんでした")}>
+          <Button small disabled={pending} onClick={() => void run(signOut)}>
             サインアウト
           </Button>
         </div>

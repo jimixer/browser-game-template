@@ -1,6 +1,12 @@
 // APIを呼び出すクライアント。同一オリジンの`/api`配下に置かれる。
+import type { BestScore, CreatedGame, GuessResult } from "api/responses";
 import type { GameView } from "game-rule-engine";
-import type { SessionUser } from "../types";
+
+export interface SessionUser {
+  id: string;
+  name: string;
+  image?: string | null;
+}
 
 const BASE_URL = "/api";
 
@@ -34,7 +40,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 /** 新しいゲームを始める。続きは`id`で引く */
-export async function createGame(): Promise<GameView & { id: string }> {
+export async function createGame(): Promise<CreatedGame> {
   return request("/games", { method: "POST" });
 }
 
@@ -43,13 +49,13 @@ export async function getGame(id: string): Promise<GameView> {
 }
 
 /** 勝ったときにサインインしていれば、更新後の自己ベストが`best`に入る */
-export async function guess(id: string, n: number): Promise<GameView & { best?: number }> {
-  return request(`/games/${encodeURIComponent(id)}/guesses`, { method: "POST", body: JSON.stringify({ guess: n }) });
+export async function submitGuess(id: string, value: number): Promise<GuessResult> {
+  return request(`/games/${encodeURIComponent(id)}/guesses`, { method: "POST", body: JSON.stringify({ guess: value }) });
 }
 
 /** 自分の自己ベスト。サインインが必要。まだ遊んでいなければnull */
 export async function getBest(): Promise<number | null> {
-  const { best } = await request<{ best: number | null }>("/best");
+  const { best } = await request<BestScore>("/best");
   return best;
 }
 

@@ -18,7 +18,7 @@ export const attachUser = createMiddleware<AppEnv>(async (c, next) => {
 
 /** 自分のデータに触るルートに掛ける。未サインインを401で止める */
 export const requireUser = createMiddleware<AppEnv>(async (c, next) => {
-  if (!c.get("userId")) return c.json({ error: "サインインが必要です" }, 401);
+  if (!c.get("userId")) return c.json({ error: "サインインしてから、もう一度お試しください" }, 401);
   await next();
 });
 

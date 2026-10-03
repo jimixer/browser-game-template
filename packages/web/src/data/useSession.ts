@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSession, signInWithDiscord, signOut } from "./apiClient";
-import type { SessionUser } from "../types";
+import { getSession, signInWithDiscord, signOut, type SessionUser } from "./apiClient";
 
 /**
  * サインイン状態。読み込み中と未サインインを区別しないと、サインイン済みでも一瞬サインイン画面が出る。
@@ -15,7 +14,6 @@ export type SessionState =
 /**
  * ページの読み込みごとに1回だけ行う、サインイン状態の問い合わせ。すべての `useSession` が共有する。
  * サインインとサインアウトはページごと読み直すので、読み込みの途中でサインイン状態は変わらない。
- * プレイヤー名は読み直さずに変わりうるので、最新の値が要る画面は `getSession` を直接呼ぶ。
  */
 let request: Promise<SessionState> | undefined;
 /** `request` が解決した値。問い合わせ中ならundefined */

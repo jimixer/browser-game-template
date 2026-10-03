@@ -1,14 +1,18 @@
-/** 同じseedからは常に同じ0〜99の値を返す疑似乱数(mulberry32) */
+/** 選べる数の範囲。画面の入力欄や説明文もここから作る */
+export const MIN_GUESS = 0;
+export const MAX_GUESS = 99;
+
+/** 同じseedからは常に同じMIN_GUESS〜MAX_GUESSの値を返す疑似乱数(mulberry32) */
 function random(seed: number): number {
   let t = (seed + 0x6d2b79f5) >>> 0;
   t = Math.imul(t ^ (t >>> 15), t | 1);
   t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) % 100;
+  return MIN_GUESS + (((t ^ (t >>> 14)) >>> 0) % (MAX_GUESS - MIN_GUESS + 1));
 }
 
 /** プレイヤーの入力として有効か。どんな入力を受け付けるかもゲームのルールなので、ここで決める */
 export function isValidGuess(guess: unknown): guess is number {
-  return Number.isInteger(guess) && (guess as number) >= 0 && (guess as number) <= 99;
+  return Number.isInteger(guess) && (guess as number) >= MIN_GUESS && (guess as number) <= MAX_GUESS;
 }
 
 /** 1ゲームで選べる回数。使い切ると負け */
