@@ -1,11 +1,12 @@
 import type { JSX } from "react";
+import { signInWithDiscord, signOut } from "../data/apiClient";
 import { useAction } from "../data/useAction";
 import { useSession } from "../data/useSession";
 import Button from "./Button";
 
 /** ヘッダー右端のサインイン状態表示。戻り値の型を書いておくと、扱っていない状態を型検査が示す */
 export default function SessionControl(): JSX.Element | null {
-  const { state, signIn, signOut } = useSession();
+  const { state } = useSession();
   // 成功すればページごと移るので、errorが入るのは失敗したときだけ
   const { error, pending, run } = useAction();
 
@@ -19,7 +20,7 @@ export default function SessionControl(): JSX.Element | null {
       return (
         <div className="flex min-w-0 items-center gap-2 text-sm">
           {error && <span className="text-danger">{error}</span>}
-          <Button kind="primary" small disabled={pending} onClick={() => void run(signIn)}>
+          <Button kind="primary" small disabled={pending} onClick={() => void run(signInWithDiscord)}>
             Discordでサインイン
           </Button>
         </div>

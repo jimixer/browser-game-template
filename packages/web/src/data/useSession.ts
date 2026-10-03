@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSession, signInWithDiscord, signOut, type SessionUser } from "./apiClient";
+import { getSession, type SessionUser } from "./apiClient";
 
 /**
  * サインイン状態。読み込み中と未サインインを区別しないと、サインイン済みでも一瞬サインイン画面が出る。
@@ -15,16 +15,16 @@ export type SessionState =
  * ページの読み込みごとに1回だけ行う、サインイン状態の問い合わせ。すべての `useSession` が共有する。
  * サインインとサインアウトはページごと読み直すので、読み込みの途中でサインイン状態は変わらない。
  */
-let request: Promise<SessionState> | undefined;
-/** `request` が解決した値。問い合わせ中ならundefined */
+let sessionRequest: Promise<SessionState> | undefined;
+/** `sessionRequest` が解決した値。問い合わせ中ならundefined */
 let resolved: SessionState | undefined;
 
 function loadSession(): Promise<SessionState> {
-  request ??= getSession().then(
+  sessionRequest ??= getSession().then(
     (res) => (resolved = res ? { status: "signedIn", user: res.user } : { status: "signedOut" }),
     () => (resolved = { status: "failed" }),
   );
-  return request;
+  return sessionRequest;
 }
 
 /**
@@ -39,5 +39,5 @@ export function useSession() {
   }, []);
 
   const user = state.status === "signedIn" ? state.user : undefined;
-  return { state, user, signIn: signInWithDiscord, signOut };
+  return { state, user };
 }
