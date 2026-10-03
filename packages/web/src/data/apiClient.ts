@@ -1,5 +1,5 @@
 // APIを呼び出すクライアント。同一オリジンの`/api`配下に置かれる。
-import type { PlayResult } from "game-rule-engine";
+import type { GameView } from "game-rule-engine";
 import type { SessionUser } from "../types";
 
 const BASE_URL = "/api";
@@ -33,9 +33,18 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
-/** サインインしていれば、更新後の自己ベストが`best`に入る */
-export async function play(guess: number): Promise<PlayResult & { best?: number }> {
-  return request("/play", { method: "POST", body: JSON.stringify({ guess }) });
+/** 新しいゲームを始める。続きは`id`で引く */
+export async function createGame(): Promise<GameView & { id: string }> {
+  return request("/games", { method: "POST" });
+}
+
+export async function getGame(id: string): Promise<GameView> {
+  return request(`/games/${encodeURIComponent(id)}`);
+}
+
+/** 勝ったときにサインインしていれば、更新後の自己ベストが`best`に入る */
+export async function guess(id: string, n: number): Promise<GameView & { best?: number }> {
+  return request(`/games/${encodeURIComponent(id)}/guesses`, { method: "POST", body: JSON.stringify({ guess: n }) });
 }
 
 /** 自分の自己ベスト。サインインが必要。まだ遊んでいなければnull */
