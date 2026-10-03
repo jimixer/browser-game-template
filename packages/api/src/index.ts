@@ -62,7 +62,7 @@ app.post("/games/:id/guesses", async (c) => {
   const userId = c.get("userId");
   if (result.score === undefined || !userId) return c.json(result);
   const best = await c.env.DB.prepare(
-    `INSERT INTO best_score (user_id, score) VALUES (?, ?)
+    `INSERT INTO example_best_score (user_id, score) VALUES (?, ?)
      ON CONFLICT (user_id) DO UPDATE SET score = max(score, excluded.score)
      RETURNING score`,
   )
@@ -73,7 +73,7 @@ app.post("/games/:id/guesses", async (c) => {
 
 /** 自分の自己ベスト。まだ遊んでいなければnull */
 app.get("/best", requireUser, async (c) => {
-  const row = await c.env.DB.prepare("SELECT score FROM best_score WHERE user_id = ?")
+  const row = await c.env.DB.prepare("SELECT score FROM example_best_score WHERE user_id = ?")
     .bind(currentUserId(c))
     .first<{ score: number }>();
   return c.json({ best: row?.score ?? null });

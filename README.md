@@ -20,7 +20,7 @@ npm install
 
 - ルール: `packages/game-rule-engine/src/index.ts`(`newGame()`・`applyGuess()`・`view()`など)とそのテスト
 - API: `packages/api/src/index.ts`の`/api/games`配下と`GET /api/best`
-- 移行: `packages/api/migrations/0002_best_score.sql`と`0003_example_game.sql`
+- 移行: `packages/api/migrations/0002_example_best_score.sql`と`0003_example_game.sql`
 - 画面: `packages/web/src/pages/`の`HomePage.tsx`・`GamePage.tsx`、`components/NewGameButton.tsx`と、`packages/web/src/data/apiClient.ts`のゲームと自己ベストの関数
 
 例のテーブルが要らなくなっても、`0002`・`0003`は消さず書き換えず、`0004_`の移行で`DROP TABLE example_game;`のようにする。`npm run dev`の時点でローカルのD1には当たっているので、書き換えても反映されない。
