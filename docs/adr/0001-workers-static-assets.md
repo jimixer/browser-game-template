@@ -15,7 +15,7 @@
 
 Workers Static Assetsを使い、apiのWorkerがwebのビルド結果(`packages/web/dist`)もあわせて配る。`packages/api/wrangler.jsonc`の`assets`で次のように設定する。
 
-- `run_worker_first: ["/api/*"]`: `/api/*`だけをWorkerのExpressで処理する。
+- `run_worker_first: ["/api/*"]`: `/api/*`だけをWorker(Hono)で処理する。
 - `not_found_handling: "single-page-application"`: それ以外のパスで静的ファイルが見つからなければ`index.html`を返す。
 
 ローカル開発は従来どおり、viteの開発サーバーが`/api`をwrangler devへ転送する形を保つ。
