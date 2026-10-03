@@ -27,3 +27,63 @@ export function play(seed: number, guess: number): PlayResult {
   const answer = random(seed);
   return { seed, guess, answer, score: 99 - Math.abs(answer - guess) };
 }
+
+/** 1ゲームで選べる回数。使い切ると負け */
+export const MAX_GUESSES = 10;
+
+/**
+ * 1ゲーム分の状態。サーバーだけが持つ。正解を含むので、そのままクライアントへ返さない(`view`を通す)。
+ * 状態を変えるのは`applyGuess`だけで、毎回新しい値を返す。
+ */
+export interface GameState {
+  answer: number;
+  guesses: number[];
+}
+
+export type GameStatus = "playing" | "won" | "lost";
+
+/** 正解は選んだ数より大きいか、小さいか */
+export type Hint = "higher" | "lower" | "correct";
+
+/** プレイヤーに見せてよい部分 */
+export interface GameView {
+  status: GameStatus;
+  guesses: { guess: number; hint: Hint }[];
+  /** 残りの回数 */
+  remaining: number;
+  /** 終わってから見せる */
+  answer?: number;
+  /** 勝ったときだけ。早く当てるほど高い(1〜MAX_GUESSES) */
+  score?: number;
+}
+
+export function newGame(seed: number): GameState {
+  return { answer: random(seed), guesses: [] };
+}
+
+export function status(state: GameState): GameStatus {
+  if (state.guesses.includes(state.answer)) return "won";
+  return state.guesses.length >= MAX_GUESSES ? "lost" : "playing";
+}
+
+/** 1手進める。終わったゲームに呼ぶのは呼び出し側の誤りなので例外にする。先に`status`を見ること */
+export function applyGuess(state: GameState, guess: number): GameState {
+  if (status(state) !== "playing") throw new Error("終わったゲームは進められない");
+  return { ...state, guesses: [...state.guesses, guess] };
+}
+
+function hint(answer: number, guess: number): Hint {
+  if (guess === answer) return "correct";
+  return answer > guess ? "higher" : "lower";
+}
+
+export function view(state: GameState): GameView {
+  const s = status(state);
+  return {
+    status: s,
+    guesses: state.guesses.map((guess) => ({ guess, hint: hint(state.answer, guess) })),
+    remaining: MAX_GUESSES - state.guesses.length,
+    ...(s !== "playing" && { answer: state.answer }),
+    ...(s === "won" && { score: MAX_GUESSES - state.guesses.length + 1 }),
+  };
+}
