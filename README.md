@@ -19,7 +19,7 @@ npm install
 数当ては例なので、ゲームに置き換える。例のコードは次の場所にある。
 
 - ルール: `packages/game-rule-engine/src/index.ts`(`newGame()`・`applyGuess()`・`view()`など)とそのテスト。webも`MIN_GUESS`・`MAX_GUESS`・`MAX_GUESSES`・`GameView`・`Hint`を読む
-- API: `packages/api/src/index.ts`の`/api/games`配下と`GET /api/best`、応答の型を置く`packages/api/src/responses.ts`
+- API: `packages/api/src/games.ts`(`/api/games`配下と`GET /api/best`)と、応答の型を置く`packages/api/src/responses.ts`
 - 移行: `packages/api/migrations/0002_example_best_score.sql`と`0003_example_game.sql`
 - 画面: `packages/web/src/App.tsx`の`/games/:id`のルート、`packages/web/src/pages/`の`HomePage.tsx`・`GamePage.tsx`、`components/`の`NewGameButton.tsx`・`BestScore.tsx`と、`packages/web/src/data/apiClient.ts`のゲームと自己ベストの関数
 
