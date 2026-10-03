@@ -14,7 +14,7 @@ git grep -l browser-game-template -- ':!README.md' | xargs perl -pi -e 's/browse
 npm install
 ```
 
-置換されるのは、npmのルート名(`package-lock.json`の中も)・Worker名(`<new>`)・D1名(`<new>`)・画面のタイトル。
+置換されるのは、npmのルート名(`package-lock.json`の中も)・Worker名(`<new>`)・D1名(`<new>`)・画面のタイトル。`LICENSE`は自分のゲームに合うものへ差し替えてよい。
 
 数当ては例なので、ゲームに置き換える。例のコードは次の場所にある。
 
